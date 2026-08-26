@@ -45,12 +45,13 @@ def print_help():
     print(f"{BOLD}USO:{RESET}")
     print(f"  ./sync_notes.py [OPCIONES]\n")
     print(f"{BOLD}OPCIONES:{RESET}")
-    print(f"  {GREEN}-g, --git{RESET}         Ejecuta 'git add', 'commit' y 'push' en glmbx-web tras la sincronización.")
+    print(f"  {GREEN}-s, --sync{RESET}        Ejecuta la sincronización local hacia glmbx-web.")
+    print(f"  {GREEN}-g, --git{RESET}         Sincroniza localmente y ejecuta 'git commit' + 'push' en glmbx-web.")
     print(f"  {GREEN}--dry-run{RESET}         Simula el proceso sin copiar archivos ni ejecutar git.")
     print(f"  {GREEN}-h, --help{RESET}        Muestra este mensaje de ayuda.\n")
     print(f"{BOLD}EJEMPLOS:{RESET}")
-    print(f"  {CYAN}./sync_notes.py{RESET}              Sincroniza y valida frontmatter de notas hacia la web")
-    print(f"  {CYAN}./sync_notes.py --git{RESET}        Sincroniza, valida y publica los cambios directamente en GitHub")
+    print(f"  {CYAN}./sync_notes.py --sync{RESET}       Sincroniza los archivos locales de CPTS_Notes a la web")
+    print(f"  {CYAN}./sync_notes.py --git{RESET}        Sincroniza y publica los cambios directamente en GitHub")
     print(f"  {CYAN}./sync_notes.py --dry-run{RESET}    Comprueba qué archivos se copiarían sin modificar nada\n")
 
 
@@ -71,7 +72,6 @@ def process_markdown_content(raw_text: str, filename: str) -> Tuple[str, bool]:
     Verifica y normaliza el Frontmatter YAML para compatibilidad estricta con Astro:
     - Asegura la presencia de 'title' y 'pubDate'.
     - Si no existen, los infiere del primer encabezado (# Titulo) o del nombre de archivo.
-    - Convierte posibles wikilinks de Obsidian [[Link]] a enlaces estándar.
     """
     modified = False
     frontmatter_match = re.match(r"^---\n(.*?)\n---\n(.*)$", raw_text, re.DOTALL)
@@ -80,14 +80,12 @@ def process_markdown_content(raw_text: str, filename: str) -> Tuple[str, bool]:
         fm_content = frontmatter_match.group(1)
         body = frontmatter_match.group(2)
         
-        # Verificar si falta title o pubDate
         has_title = bool(re.search(r"^title:\s*", fm_content, re.MULTILINE))
         has_pubdate = bool(re.search(r"^pubDate:\s*", fm_content, re.MULTILINE))
         
         new_fm_lines = fm_content.splitlines()
         
         if not has_title:
-            # Inferir título del primer # del body o del filename
             first_h1 = re.search(r"^#\s+(.+)$", body, re.MULTILINE)
             clean_title = first_h1.group(1).strip() if first_h1 else filename.replace(".md", "").replace("_", " ")
             new_fm_lines.insert(0, f"title: \"{clean_title}\"")
@@ -100,12 +98,9 @@ def process_markdown_content(raw_text: str, filename: str) -> Tuple[str, bool]:
             
         final_text = f"---\n" + "\n".join(new_fm_lines) + f"\n---\n{body}"
     else:
-        # No tiene frontmatter, construir uno nuevo
         first_h1 = re.search(r"^#\s+(.+)$", raw_text, re.MULTILINE)
         clean_title = first_h1.group(1).strip() if first_h1 else filename.replace(".md", "").replace("_", " ")
         today_str = datetime.now().strftime("%Y-%m-%d")
-        
-        # Si el body empieza con # Header idéntico, mantener el texto limpio
         final_text = f"---\ntitle: \"{clean_title}\"\npubDate: '{today_str}'\n---\n\n{raw_text.lstrip()}"
         modified = True
 
@@ -119,7 +114,6 @@ def sync_notes(cpts_root: Path, web_notes_dir: Path, dry_run: bool = False) -> T
         if not dry_run:
             web_notes_dir.mkdir(parents=True, exist_ok=True)
             
-    # Recolectar archivos fuente
     source_files = {}
     for section in SECTIONS:
         sec_dir = cpts_root / section
@@ -128,14 +122,12 @@ def sync_notes(cpts_root: Path, web_notes_dir: Path, dry_run: bool = False) -> T
                 rel = p.relative_to(cpts_root)
                 source_files[str(rel)] = p
                 
-    # Recolectar archivos destino existentes
     dest_files = {}
     if web_notes_dir.exists():
         for p in web_notes_dir.rglob("*.md"):
             rel = p.relative_to(web_notes_dir)
             dest_files[str(rel)] = p
 
-    # 1. Copiar nuevos y modificados procesando Frontmatter
     for rel_str, src_path in sorted(source_files.items()):
         dest_path = web_notes_dir / rel_str
         raw_text = src_path.read_text(encoding="utf-8")
@@ -162,7 +154,6 @@ def sync_notes(cpts_root: Path, web_notes_dir: Path, dry_run: bool = False) -> T
                 dest_path.parent.mkdir(parents=True, exist_ok=True)
                 dest_path.write_text(processed_text, encoding="utf-8")
 
-    # 2. Limpiar archivos borrados en fuente
     for rel_str, dest_path in sorted(dest_files.items()):
         top_folder = rel_str.split(os.sep)[0]
         if top_folder in SECTIONS:
@@ -199,12 +190,18 @@ def git_commit_and_push(web_root: Path, summary_msg: str):
 def main():
     args = sys.argv[1:]
     
-    if "-h" in args or "--help" in args:
+    # Si no se pasan argumentos o se pide ayuda, mostrar el menú de opciones
+    if not args or "-h" in args or "--help" in args:
         print_help()
         return
 
     dry_run = "--dry-run" in args
     do_git = "-g" in args or "--git" in args
+    do_sync = "-s" in args or "--sync" in args or do_git or dry_run
+
+    if not do_sync:
+        print_help()
+        return
 
     print_banner()
     cpts_root, web_root, web_notes_dir = get_paths()

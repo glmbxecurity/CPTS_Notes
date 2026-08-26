@@ -40,13 +40,14 @@ def print_help():
     print(f"{BOLD}USO:{RESET}")
     print(f"  ./sync_writeups.py [OPCIONES]\n")
     print(f"{BOLD}OPCIONES:{RESET}")
-    print(f"  {GREEN}-a, --auto{RESET}        Modo automático: acepta todas las inferencias sin preguntar.")
+    print(f"  {GREEN}-i, --interactive{RESET} Modo interactivo: valida o ajusta los metadatos de cada writeup.")
+    print(f"  {GREEN}-a, --auto{RESET}        Modo automático: acepta todas las inferencias y sincroniza de forma desatendida.")
     print(f"  {GREEN}--all{RESET}             Re-sincroniza todos los writeups (incluso los que ya están en la web).")
     print(f"  {GREEN}--dry-run{RESET}         Simula el proceso sin escribir archivos ni ejecutar git commit/push.")
     print(f"  {GREEN}-h, --help{RESET}        Muestra este mensaje de ayuda.\n")
     print(f"{BOLD}EJEMPLOS:{RESET}")
-    print(f"  {CYAN}./sync_writeups.py{RESET}           Modo interactivo (por defecto): valida o ajusta cada campo con [Enter]")
-    print(f"  {CYAN}./sync_writeups.py --auto{RESET}    Sincronización rápida 100% desatendida")
+    print(f"  {CYAN}./sync_writeups.py -i{RESET}        Modo interactivo: valida o ajusta cada campo con [Enter]")
+    print(f"  {CYAN}./sync_writeups.py -a{RESET}        Sincronización rápida 100% desatendida")
     print(f"  {CYAN}./sync_writeups.py --dry-run{RESET} Comprueba qué detectaría sin tocar nada\n")
 
 
@@ -368,12 +369,13 @@ def git_sync(web_root: Path, writeup_titles: List[str], dry_run: bool = False):
 
 
 def main():
-    if "-h" in sys.argv or "--help" in sys.argv:
+    if len(sys.argv) == 1 or "-h" in sys.argv or "--help" in sys.argv:
         print_help()
         sys.exit(0)
         
     print_banner()
     auto_mode = "--auto" in sys.argv or "-a" in sys.argv
+    interactive = "--interactive" in sys.argv or "-i" in sys.argv
     force_all = "--all" in sys.argv
     dry_run = "--dry-run" in sys.argv
     
