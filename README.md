@@ -6,12 +6,12 @@
 
 ## 🎯 Propósito del Repositorio
 
-Este repositorio actúa como una **bóveda de conocimiento (Obsidian Vault)** estructurada siguiendo las fases del estándar **PTES** (*Penetration Testing Execution Standard*) y la ruta oficial **Penetration Tester Job Role Path** de HTB Academy. 
+Este repositorio actúa como una **bóveda de conocimiento** estructurada siguiendo las fases del estándar **PTES** (*Penetration Testing Execution Standard*) y la ruta oficial **Penetration Tester Job Role Path** de HTB Academy. 
 
 Su diseño prioriza:
 * **Comandos y sintaxis exacta:** Flags, opciones avanzadas y oneliners listos para su uso en auditorías.
 * **Metodología y fundamentos:** Explicación técnica del *por qué* de cada vector de ataque antes del *cómo*.
-* **Sincronización automatizada:** Integración directa con el portal web [glmbxecurity](https://github.com/glmbxecurity/glmbx-web).
+* **Sincronización automatizada:** Integración directa con mi web [glmbxecurity](https://glmbx.es).
 
 ---
 
@@ -38,25 +38,6 @@ CPTS_Notes/
 ```
 
 ---
-
-## ⚙️ Automatización y Sincronización con la Web
-
-En la carpeta [`06_Scripts/`](./06_Scripts/) se incluyen herramientas en Python para publicar automáticamente contenido hacia el repositorio de la web:
-
-1. **Sincronización de Notas Técnicas (`sync_notes.py`)**:
-   Valida el Frontmatter YAML de Astro (`title`, `pubDate`) y sincroniza los cambios locales:
-   ```bash
-   ./06_Scripts/sync_notes.py --git
-   ```
-
-2. **Sincronización de Writeups (`sync_writeups.py`)**:
-   Detecta nuevas resoluciones de máquinas en `10_HTB_writeups/`, normaliza metadatos (plataforma, dificultad, fecha) y migra capturas:
-   ```bash
-   ./06_Scripts/sync_writeups.py --git
-   ```
-
----
-
 ## 🔒 Aviso Legal y Ético
 
 Todo el contenido, comandos y técnicas documentadas en este repositorio están destinados **única y exclusivamente para fines educativos, investigación en ciberseguridad, certificaciones y pruebas de penetración autorizadas**. El autor no se hace responsable del uso indebido de la información aquí expuesta.
