@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
 sync_writeups.py
-Sincronizador automático/interactivo de writeups de CPTS_Notes a glmbx-web.
-Detecta nuevos writeups, extrae y sugiere metadatos (título, plataforma, dificultad, fecha, certificación),
-convierte imágenes de Obsidian y realiza commit + push en el repositorio de glmbx-web.
+Sincronizador automático e interactivo de writeups desde CPTS_Notes hacia glmbx-web.
+Infiere metadatos (título, plataforma, dificultad, certificación), transforma imágenes Obsidian
+y gestiona la sincronización local y remota en Git.
 """
 
 import os
@@ -11,6 +11,7 @@ import sys
 import re
 import shutil
 import subprocess
+import argparse
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
@@ -37,24 +38,33 @@ def print_banner():
 
 def print_help():
     print_banner()
+    print(f"{BOLD}DESCRIPCIÓN:{RESET}")
+    print(f"  Detecta, transforma y sincroniza writeups de CTFs desde CPTS_Notes hacia glmbx-web.\n")
     print(f"{BOLD}USO:{RESET}")
-    print(f"  ./sync_writeups.py [OPCIONES]\n")
-    print(f"{BOLD}OPCIONES:{RESET}")
-    print(f"  {GREEN}-i, --interactive{RESET} Modo interactivo: valida o ajusta los metadatos de cada writeup.")
-    print(f"  {GREEN}-a, --auto{RESET}        Modo automático: acepta todas las inferencias y sincroniza de forma desatendida.")
-    print(f"  {GREEN}--all{RESET}             Re-sincroniza todos los writeups (incluso los que ya están en la web).")
-    print(f"  {GREEN}--dry-run{RESET}         Simula el proceso sin escribir archivos ni ejecutar git commit/push.")
-    print(f"  {GREEN}-h, --help{RESET}        Muestra este mensaje de ayuda.\n")
-    print(f"{BOLD}EJEMPLOS:{RESET}")
-    print(f"  {CYAN}./sync_writeups.py -i{RESET}        Modo interactivo: valida o ajusta cada campo con [Enter]")
-    print(f"  {CYAN}./sync_writeups.py -a{RESET}        Sincronización rápida 100% desatendida")
-    print(f"  {CYAN}./sync_writeups.py --dry-run{RESET} Comprueba qué detectaría sin tocar nada\n")
+    print(f"  ./sync_writeups.py [MODO] [OPCIONES]\n")
+    print(f"{BOLD}MODOS DE EJECUCIÓN (Seleccioná uno):{RESET}")
+    print(f"  {GREEN}-l, --local{RESET}         {BOLD}Sincronización local:{RESET} Procesa y copia writeups hacia glmbx-web local (sin Git).")
+    print(f"  {GREEN}--push-cpts{RESET}        {BOLD}Push CPTS_Notes:{RESET} Hace commit y push de cambios en el repositorio CPTS_Notes.")
+    print(f"  {GREEN}-f, --full{RESET}          {BOLD}Flujo Completo:{RESET} Sincronización local + Push a CPTS_Notes + Push a glmbx-web.\n")
+    print(f"{BOLD}MODO DE IMPORTACIÓN:{RESET}")
+    print(f"  {CYAN}-i, --interactive{RESET}   Modo interactivo: Valida o edita título, plataforma y dificultad uno a uno (por defecto).")
+    print(f"  {CYAN}-a, --auto{RESET}          Modo automático: Acepta todas las inferencias y sincroniza de forma 100% desatendida.\n")
+    print(f"{BOLD}OPCIONES ADICIONALES:{RESET}")
+    print(f"  {YELLOW}-d, --dry-run{RESET}       {BOLD}Simulación:{RESET} Muestra qué writeups e imágenes se procesarían sin modificar nada.")
+    print(f"  {YELLOW}--all{RESET}               Fuerza la re-sincronización de todos los writeups (incluso los existentes).")
+    print(f"  {YELLOW}-h, --help{RESET}          Muestra este menú de ayuda detallado.\n")
+    print(f"{BOLD}EJEMPLOS DE USO:{RESET}")
+    print(f"  {CYAN}./sync_writeups.py --local -a{RESET}            Sincroniza writeups nuevos a glmbx-web de forma automática.")
+    print(f"  {CYAN}./sync_writeups.py --local -i{RESET}            Sincroniza revisando los metadatos interactivamente.")
+    print(f"  {CYAN}./sync_writeups.py --push-cpts{RESET}          Guarda y sube los writeups a tu repositorio CPTS_Notes.")
+    print(f"  {CYAN}./sync_writeups.py --full -a{RESET}            Sincroniza y publica todo automáticamente en ambos repositorios.")
+    print(f"  {CYAN}./sync_writeups.py --local --dry-run{RESET}    Simula el proceso de detección sin escribir en disco.\n")
 
 
 def get_paths() -> Tuple[Path, Path, Path, Path]:
     """Obtiene las rutas base de CPTS_Notes y glmbx-web."""
     script_dir = Path(__file__).resolve().parent
-    cpts_root = script_dir.parents[1] if script_dir.name in ["scripts", "Scripts"] else Path("/home/eddy/Documentos/git_repos/CPTS_Notes")
+    cpts_root = script_dir.parent if script_dir.name in ["06_Scripts", "scripts", "Scripts"] else Path("/home/eddy/Documentos/git_repos/CPTS_Notes")
     
     web_root = cpts_root.parent / "glmbx-web"
     if not web_root.exists():
@@ -322,134 +332,198 @@ def process_markdown_and_assets(
     return final_text
 
 
-def git_sync(web_root: Path, writeup_titles: List[str], dry_run: bool = False):
-    """Realiza commit y push en el repositorio glmbx-web."""
-    if dry_run:
-        print(f"\n{YELLOW}[DRY-RUN] Simulación de git commit y push para: {', '.join(writeup_titles)}{RESET}")
-        return
-        
+def git_commit_and_push_cpts(cpts_root: Path, dry_run: bool = False) -> bool:
+    """Realiza commit y push en el repositorio CPTS_Notes."""
+    print(f"\n{BOLD}🚀 Verificando Git en CPTS_Notes...{RESET}")
     try:
         status = subprocess.run(
-            ["git", "-C", str(web_root), "status", "--porcelain"],
-            capture_output=True, text=True, check=True
+            ["git", "status", "--porcelain"],
+            cwd=cpts_root, capture_output=True, text=True, check=True
         )
-        if not status.stdout.strip():
-            print(f"\n{YELLOW}No hay cambios pendientes en git para glmbx-web.{RESET}")
-            return
+        changes = status.stdout.strip()
+        if not changes:
+            print(f"{YELLOW}ℹ️ No hay cambios pendientes en CPTS_Notes para commitear.{RESET}")
+            return False
 
-        print(f"\n{CYAN}{BOLD}📦 Cambios detectados en git para glmbx-web:{RESET}")
-        for line in status.stdout.strip().split("\n"):
-            print(f"  {line}")
-            
-        do_commit = input(f"\n{YELLOW}¿Deseas commitear y pushear a GitHub en glmbx-web? [S/n]: {RESET}").strip().lower()
-        if do_commit in ["n", "no"]:
-            print(f"{DIM}Operación git cancelada por el usuario. Los archivos locales han sido guardados.{RESET}")
-            return
-            
-        subprocess.run(["git", "-C", str(web_root), "add", "src/content/ctf_writeups", "public/images/ctf_writeups"], check=True)
-        
-        titles_str = ", ".join(writeup_titles)
+        if dry_run:
+            print(f"{YELLOW}[DRY-RUN] Cambios detectados en CPTS_Notes que se commitearían:{RESET}")
+            for line in changes.splitlines():
+                print(f"  {line}")
+            print(f"{YELLOW}[DRY-RUN] Se ejecutaría: git add . && git commit -m 'docs: update writeups' && git push{RESET}")
+            return True
+
+        subprocess.run(["git", "add", "."], cwd=cpts_root, check=True)
+        commit_msg = f"docs(ctf): update writeups ({datetime.now().strftime('%Y-%m-%d %H:%M')})"
+        subprocess.run(["git", "commit", "-m", commit_msg], cwd=cpts_root, check=True)
+        print(f"{GREEN}✔ Commit creado en CPTS_Notes: {commit_msg}{RESET}")
+
+        print(f"📤 Haciendo push a origin en CPTS_Notes...")
+        subprocess.run(["git", "push"], cwd=cpts_root, check=True)
+        print(f"{GREEN}✔ Push completado en CPTS_Notes exitosamente.{RESET}")
+        return True
+    except subprocess.CalledProcessError as e:
+        print(f"{RED}❌ Error en git (CPTS_Notes): {e}{RESET}")
+        return False
+
+
+def git_commit_and_push_web(web_root: Path, writeup_titles: List[str], dry_run: bool = False) -> bool:
+    """Realiza commit y push en el repositorio glmbx-web."""
+    print(f"\n{BOLD}🚀 Verificando Git en glmbx-web...{RESET}")
+    targets = ["src/content/ctf_writeups", "public/images/ctf_writeups"]
+    try:
+        status = subprocess.run(
+            ["git", "status", "--porcelain"] + targets,
+            cwd=web_root, capture_output=True, text=True, check=True
+        )
+        changes = status.stdout.strip()
+        if not changes:
+            print(f"{YELLOW}ℹ️ No hay cambios pendientes en glmbx-web para commitear.{RESET}")
+            return False
+
+        titles_str = ", ".join(writeup_titles) if writeup_titles else "update ctf writeups"
         if len(writeup_titles) == 1:
             commit_msg = f"feat(ctf): add writeup for {writeup_titles[0]}"
-        else:
+        elif len(writeup_titles) > 1:
             commit_msg = f"feat(ctf): add {len(writeup_titles)} writeups ({titles_str})"
-            
-        subprocess.run(["git", "-C", str(web_root), "commit", "-m", commit_msg], check=True)
-        print(f"{GREEN}✔ Commit creado:{RESET} {commit_msg}")
-        
-        print(f"\n{CYAN}🚀 Pusheando a origin main...{RESET}")
-        push_res = subprocess.run(["git", "-C", str(web_root), "push"], capture_output=True, text=True)
-        if push_res.returncode == 0:
-            print(f"{GREEN}{BOLD}🎉 Push completado con éxito a GitHub! Vercel desplegará los cambios.{RESET}")
         else:
-            print(f"{RED}Error al pushear:{RESET}\n{push_res.stderr}")
-            
+            commit_msg = "feat(ctf): update writeups and assets"
+
+        if dry_run:
+            print(f"{YELLOW}[DRY-RUN] Cambios detectados en glmbx-web que se commitearían:{RESET}")
+            for line in changes.splitlines():
+                print(f"  {line}")
+            print(f"{YELLOW}[DRY-RUN] Se ejecutaría: git add {' '.join(targets)} && git commit -m '{commit_msg}' && git push{RESET}")
+            return True
+
+        subprocess.run(["git", "add"] + targets, cwd=web_root, check=True)
+        subprocess.run(["git", "commit", "-m", commit_msg], cwd=web_root, check=True)
+        print(f"{GREEN}✔ Commit creado en glmbx-web: {commit_msg}{RESET}")
+
+        print(f"📤 Haciendo push a origin en glmbx-web...")
+        subprocess.run(["git", "push"], cwd=web_root, check=True)
+        print(f"{GREEN}✔ Push completado en glmbx-web exitosamente.{RESET}")
+        return True
     except subprocess.CalledProcessError as e:
-        print(f"{RED}Error ejecutando comandos git:{RESET} {e}")
+        print(f"{RED}❌ Error en git (glmbx-web): {e}{RESET}")
+        return False
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description="Sincronizador de writeups de CPTS_Notes hacia glmbx-web.",
+        add_help=False
+    )
+    parser.add_argument("-l", "--local", action="store_true", help="Sincronización local hacia glmbx-web (sin Git).")
+    parser.add_argument("--push-cpts", action="store_true", help="Commit y push únicamente en el repositorio CPTS_Notes.")
+    parser.add_argument("-f", "--full", action="store_true", help="Flujo completo: Sincronización local + Push en CPTS_Notes + Push en glmbx-web.")
+    parser.add_argument("-a", "--auto", action="store_true", help="Modo automático / desatendido (usa metadatos inferidos).")
+    parser.add_argument("-i", "--interactive", action="store_true", help="Modo interactivo para validar/ajustar metadatos.")
+    parser.add_argument("-d", "--dry-run", action="store_true", help="Simula el proceso sin escribir en disco ni ejecutar Git.")
+    parser.add_argument("--all", action="store_true", help="Fuerza la re-sincronización de todos los writeups.")
+    parser.add_argument("-h", "--help", action="store_true", help="Muestra el menú de ayuda detallado.")
+    return parser
 
 
 def main():
-    if len(sys.argv) == 1 or "-h" in sys.argv or "--help" in sys.argv:
+    parser = build_parser()
+    args = parser.parse_args()
+
+    # Si no se pasan argumentos o se solicita ayuda, mostrar menú explicativo
+    if len(sys.argv) == 1 or args.help:
         print_help()
-        sys.exit(0)
-        
+        return
+
+    # Validar que al menos un modo o dry-run sea seleccionado
+    if not (args.local or args.push_cpts or args.full or args.dry_run):
+        print_help()
+        return
+
     print_banner()
-    auto_mode = "--auto" in sys.argv or "-a" in sys.argv
-    interactive = "--interactive" in sys.argv or "-i" in sys.argv
-    force_all = "--all" in sys.argv
-    dry_run = "--dry-run" in sys.argv
-    
-    if dry_run:
-        print(f"{YELLOW}{BOLD}[MODO DRY-RUN ACTIVADO]{RESET} No se realizarán cambios en disco ni en git.\n")
-        
+    auto_mode = args.auto and not args.interactive
+
     cpts_root, web_root, web_writeups_dir, web_images_dir = get_paths()
-    
+
     if not cpts_root.exists():
-        print(f"{RED}Error: No se encontró la carpeta CPTS_Notes en {cpts_root}{RESET}")
+        print(f"{RED}❌ Error: No se encontró la carpeta CPTS_Notes en {cpts_root}{RESET}")
         sys.exit(1)
-        
+
     if not web_root.exists():
-        print(f"{RED}Error: No se encontró el repositorio glmbx-web en {web_root}{RESET}")
+        print(f"{RED}❌ Error: No se encontró el repositorio glmbx-web en {web_root}{RESET}")
         sys.exit(1)
-        
-    print(f"📁 {BOLD}Origen (CPTS_Notes):{RESET} {cpts_root}")
-    print(f"📁 {BOLD}Destino (glmbx-web):{RESET} {web_writeups_dir}\n")
-    
+
+    print(f"{BOLD}Rutas configuradas:{RESET}")
+    print(f"  • Origen (CPTS_Notes):  {CYAN}{cpts_root}{RESET}")
+    print(f"  • Destino (glmbx-web):  {CYAN}{web_writeups_dir}{RESET}")
+    if args.dry_run:
+        print(f"  • Modo:                 {YELLOW}DRY-RUN (Simulación activa){RESET}")
+    print()
+
+    # Modo: Push solo en CPTS_Notes
+    if args.push_cpts and not (args.local or args.full):
+        git_commit_and_push_cpts(cpts_root, dry_run=args.dry_run)
+        print(f"\n{GREEN}{BOLD}✨ Tarea de CPTS_Notes finalizada.{RESET}\n")
+        return
+
+    # Búsqueda y preparación de writeups
     cpts_writeups = find_writeup_files(cpts_root)
     if not cpts_writeups:
         print(f"{YELLOW}No se encontraron archivos de writeups en {cpts_root}.{RESET}")
         return
-        
+
     existing_web = get_existing_web_writeups(web_writeups_dir)
-    
     pending_files = []
     for file_path in cpts_writeups:
         clean_name = re.sub(r"[-_\s]", "", file_path.stem.lower())
-        if force_all or (file_path.name.lower() not in existing_web and clean_name not in existing_web):
+        if args.all or (file_path.name.lower() not in existing_web and clean_name not in existing_web):
             pending_files.append(file_path)
         else:
             print(f"  {DIM}✔ Ya en la web: {file_path.name}{RESET}")
-            
+
     if not pending_files:
         print(f"\n{GREEN}{BOLD}✨ ¡Todos los writeups de CPTS_Notes ya están sincronizados en glmbx-web!{RESET}")
-        if not force_all:
+        if not args.all:
             print(f"{DIM}Usa --all para forzar la re-sincronización de todos.{RESET}\n")
-        return
-        
-    print(f"\n{CYAN}{BOLD}Se encontraron {len(pending_files)} writeup(s) pendientes de sincronizar:{RESET}")
-    for p in pending_files:
-        print(f"  📌 {p.name} ({p.parent.name})")
-        
-    if not dry_run:
-        web_writeups_dir.mkdir(parents=True, exist_ok=True)
-    imported_titles = []
-    
-    for file_path in pending_files:
-        content = file_path.read_text(encoding="utf-8")
-        inferred = infer_metadata(file_path, content)
-        
-        meta = prompt_user_metadata(inferred, file_path.name, auto_mode=auto_mode)
-        if not meta:
-            continue
-            
-        final_markdown = process_markdown_and_assets(file_path, content, meta, web_images_dir, dry_run=dry_run)
-        
-        dest_filename = f"{meta['title'].replace('/', '-').replace(' ', '-')}.md"
-        dest_file = web_writeups_dir / dest_filename
-        
-        if not dry_run:
-            dest_file.write_text(final_markdown, encoding="utf-8")
-            print(f"  {GREEN}{BOLD}✔ Guardado:{RESET} {dest_file.relative_to(web_root)}")
-        else:
-            print(f"  {YELLOW}{BOLD}[DRY-RUN] Se guardaría:{RESET} {dest_file.relative_to(web_root)}")
-            
-        imported_titles.append(meta["title"])
-        
-    if imported_titles:
-        git_sync(web_root, imported_titles, dry_run=dry_run)
-        print(f"\n{GREEN}{BOLD}🚀 Proceso completado exitosamente.{RESET}\n")
     else:
-        print(f"\n{YELLOW}No se importó ningún archivo.{RESET}\n")
+        print(f"\n{CYAN}{BOLD}Se encontraron {len(pending_files)} writeup(s) pendientes de sincronizar:{RESET}")
+        for p in pending_files:
+            print(f"  📌 {p.name} ({p.parent.name})")
+
+    imported_titles = []
+    if pending_files:
+        if not args.dry_run:
+            web_writeups_dir.mkdir(parents=True, exist_ok=True)
+
+        for file_path in pending_files:
+            content = file_path.read_text(encoding="utf-8")
+            inferred = infer_metadata(file_path, content)
+            
+            meta = prompt_user_metadata(inferred, file_path.name, auto_mode=auto_mode)
+            if not meta:
+                continue
+                
+            final_markdown = process_markdown_and_assets(file_path, content, meta, web_images_dir, dry_run=args.dry_run)
+            
+            dest_filename = f"{meta['title'].replace('/', '-').replace(' ', '-')}.md"
+            dest_file = web_writeups_dir / dest_filename
+            
+            if not args.dry_run:
+                dest_file.write_text(final_markdown, encoding="utf-8")
+                print(f"  {GREEN}{BOLD}✔ Guardado:{RESET} {dest_file.relative_to(web_root)}")
+            else:
+                print(f"  {YELLOW}{BOLD}[DRY-RUN] Se guardaría:{RESET} {dest_file.relative_to(web_root)}")
+                
+            imported_titles.append(meta["title"])
+
+    # Manejo de Git según el modo
+    if args.full:
+        git_commit_and_push_cpts(cpts_root, dry_run=args.dry_run)
+        git_commit_and_push_web(web_root, imported_titles, dry_run=args.dry_run)
+    elif args.push_cpts:
+        git_commit_and_push_cpts(cpts_root, dry_run=args.dry_run)
+    elif args.local and not args.dry_run:
+        print(f"\n{CYAN}💡 Tip:{RESET} Para sincronizar y publicar en ambos repositorios ejecutá: {BOLD}./sync_writeups.py --full -a{RESET}\n")
+
+    print(f"\n{GREEN}{BOLD}🚀 Proceso completado exitosamente.{RESET}\n")
 
 
 if __name__ == "__main__":

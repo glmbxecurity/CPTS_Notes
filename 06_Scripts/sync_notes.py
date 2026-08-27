@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 """
 sync_notes.py
-Sincronizador inteligente de notas de CPTS_Notes (Obsidian Vault) hacia glmbx-web (1_cibersecurity).
-Valida y normaliza el Frontmatter YAML de Astro (title, pubDate, description, tags), convierte sintaxis de Obsidian
-y gestiona la publicación con git en glmbx-web.
+Sincronizador inteligente de notas de estudio desde CPTS_Notes hacia glmbx-web.
+Normaliza y valida el Frontmatter YAML de Astro y gestiona la sincronización local y remota en Git.
 """
 
 import os
@@ -11,11 +10,12 @@ import sys
 import re
 import shutil
 import subprocess
+import argparse
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Tuple, Optional
 
-# Colores ANSI
+# Colores ANSI para salida en terminal
 RESET = "\033[0m"
 BOLD = "\033[1m"
 GREEN = "\033[32m"
@@ -42,17 +42,22 @@ def print_banner():
 
 def print_help():
     print_banner()
+    print(f"{BOLD}DESCRIPCIÓN:{RESET}")
+    print(f"  Sincroniza y transforma notas de estudio desde CPTS_Notes hacia glmbx-web.\n")
     print(f"{BOLD}USO:{RESET}")
-    print(f"  ./sync_notes.py [OPCIONES]\n")
-    print(f"{BOLD}OPCIONES:{RESET}")
-    print(f"  {GREEN}-s, --sync{RESET}        Ejecuta la sincronización local hacia glmbx-web.")
-    print(f"  {GREEN}-g, --git{RESET}         Sincroniza localmente y ejecuta 'git commit' + 'push' en glmbx-web.")
-    print(f"  {GREEN}--dry-run{RESET}         Simula el proceso sin copiar archivos ni ejecutar git.")
-    print(f"  {GREEN}-h, --help{RESET}        Muestra este mensaje de ayuda.\n")
-    print(f"{BOLD}EJEMPLOS:{RESET}")
-    print(f"  {CYAN}./sync_notes.py --sync{RESET}       Sincroniza los archivos locales de CPTS_Notes a la web")
-    print(f"  {CYAN}./sync_notes.py --git{RESET}        Sincroniza y publica los cambios directamente en GitHub")
-    print(f"  {CYAN}./sync_notes.py --dry-run{RESET}    Comprueba qué archivos se copiarían sin modificar nada\n")
+    print(f"  ./sync_notes.py [MODO] [OPCIONES]\n")
+    print(f"{BOLD}MODOS DE EJECUCIÓN (Seleccioná uno):{RESET}")
+    print(f"  {GREEN}-l, --local{RESET}         {BOLD}Sincronización local:{RESET} Copia y normaliza notas hacia glmbx-web local (sin Git).")
+    print(f"  {GREEN}--push-cpts{RESET}        {BOLD}Push CPTS_Notes:{RESET} Hace commit y push de cambios en el repositorio CPTS_Notes.")
+    print(f"  {GREEN}-f, --full{RESET}          {BOLD}Flujo Completo:{RESET} Sincronización local + Push a CPTS_Notes + Push a glmbx-web.\n")
+    print(f"{BOLD}OPCIONES ADICIONALES:{RESET}")
+    print(f"  {YELLOW}-d, --dry-run{RESET}       {BOLD}Simulación:{RESET} Muestra qué notas se copiarían y qué cambios habría en Git sin modificar nada.")
+    print(f"  {YELLOW}-h, --help{RESET}          Muestra este menú de ayuda detallado.\n")
+    print(f"{BOLD}EJEMPLOS DE USO:{RESET}")
+    print(f"  {CYAN}./sync_notes.py --local{RESET}            Copia notas modificadas a glmbx-web para probarlas localmente.")
+    print(f"  {CYAN}./sync_notes.py --push-cpts{RESET}        Guarda y sube los cambios únicamente a tu repositorio CPTS_Notes.")
+    print(f"  {CYAN}./sync_notes.py --full{RESET}             Sincroniza localmente y sube cambios a ambos repositorios remotos.")
+    print(f"  {CYAN}./sync_notes.py --local --dry-run{RESET}  Simula la sincronización local sin tocar archivos en disco.\n")
 
 
 def get_paths() -> Tuple[Path, Path, Path]:
@@ -166,54 +171,126 @@ def sync_notes(cpts_root: Path, web_notes_dir: Path, dry_run: bool = False) -> T
     return added, updated, deleted
 
 
-def git_commit_and_push(web_root: Path, summary_msg: str):
-    print(f"\n{BOLD}🚀 Ejecutando Git en glmbx-web...{RESET}")
+def git_commit_and_push_cpts(cpts_root: Path, dry_run: bool = False) -> bool:
+    print(f"\n{BOLD}🚀 Verificando Git en CPTS_Notes...{RESET}")
     try:
-        subprocess.run(["git", "add", "src/content/1_cibersecurity"], cwd=web_root, check=True)
-        status = subprocess.run(["git", "status", "--porcelain", "src/content/1_cibersecurity"], cwd=web_root, capture_output=True, text=True, check=True)
-        
-        if not status.stdout.strip():
-            print(f"{YELLOW}ℹ️ No hay cambios pendientes en git para commitear.{RESET}")
-            return
+        status = subprocess.run(
+            ["git", "status", "--porcelain"],
+            cwd=cpts_root, capture_output=True, text=True, check=True
+        )
+        changes = status.stdout.strip()
+        if not changes:
+            print(f"{YELLOW}ℹ️ No hay cambios pendientes en CPTS_Notes para commitear.{RESET}")
+            return False
 
+        if dry_run:
+            print(f"{YELLOW}[DRY-RUN] Cambios detectados en CPTS_Notes que se commitearían:{RESET}")
+            for line in changes.splitlines():
+                print(f"  {line}")
+            print(f"{YELLOW}[DRY-RUN] Se ejecutaría: git add . && git commit -m 'docs: update notes' && git push{RESET}")
+            return True
+
+        subprocess.run(["git", "add", "."], cwd=cpts_root, check=True)
+        commit_msg = f"docs: update study notes ({datetime.now().strftime('%Y-%m-%d %H:%M')})"
+        subprocess.run(["git", "commit", "-m", commit_msg], cwd=cpts_root, check=True)
+        print(f"{GREEN}✔ Commit creado en CPTS_Notes: {commit_msg}{RESET}")
+
+        print(f"📤 Haciendo push a origin en CPTS_Notes...")
+        subprocess.run(["git", "push"], cwd=cpts_root, check=True)
+        print(f"{GREEN}✔ Push completado en CPTS_Notes exitosamente.{RESET}")
+        return True
+    except subprocess.CalledProcessError as e:
+        print(f"{RED}❌ Error en git (CPTS_Notes): {e}{RESET}")
+        return False
+
+
+def git_commit_and_push_web(web_root: Path, summary_msg: str, dry_run: bool = False) -> bool:
+    print(f"\n{BOLD}🚀 Verificando Git en glmbx-web...{RESET}")
+    target_path = "src/content/1_cibersecurity"
+    try:
+        status = subprocess.run(
+            ["git", "status", "--porcelain", target_path],
+            cwd=web_root, capture_output=True, text=True, check=True
+        )
+        changes = status.stdout.strip()
+        if not changes:
+            print(f"{YELLOW}ℹ️ No hay cambios pendientes en glmbx-web ({target_path}) para commitear.{RESET}")
+            return False
+
+        if dry_run:
+            print(f"{YELLOW}[DRY-RUN] Cambios detectados en glmbx-web ({target_path}) que se commitearían:{RESET}")
+            for line in changes.splitlines():
+                print(f"  {line}")
+            print(f"{YELLOW}[DRY-RUN] Se ejecutaría: git add {target_path} && git commit -m 'docs(cibersecurity): sync notes from CPTS vault - {summary_msg}' && git push{RESET}")
+            return True
+
+        subprocess.run(["git", "add", target_path], cwd=web_root, check=True)
         commit_msg = f"docs(cibersecurity): sync notes from CPTS vault - {summary_msg}"
         subprocess.run(["git", "commit", "-m", commit_msg], cwd=web_root, check=True)
-        print(f"{GREEN}✔ Commit creado: {commit_msg}{RESET}")
-        
-        print(f"📤 Haciendo push a origin...")
+        print(f"{GREEN}✔ Commit creado en glmbx-web: {commit_msg}{RESET}")
+
+        print(f"📤 Haciendo push a origin en glmbx-web...")
         subprocess.run(["git", "push"], cwd=web_root, check=True)
-        print(f"{GREEN}✔ Push completado exitosamente.{RESET}")
+        print(f"{GREEN}✔ Push completado en glmbx-web exitosamente.{RESET}")
+        return True
     except subprocess.CalledProcessError as e:
-        print(f"{RED}❌ Error en git: {e}{RESET}")
+        print(f"{RED}❌ Error en git (glmbx-web): {e}{RESET}")
+        return False
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description="Sincronizador de notas de CPTS_Notes hacia glmbx-web.",
+        add_help=False
+    )
+    parser.add_argument("-l", "--local", action="store_true", help="Sincronización local hacia glmbx-web (sin Git).")
+    parser.add_argument("--push-cpts", action="store_true", help="Commit y push únicamente en el repositorio CPTS_Notes.")
+    parser.add_argument("-f", "--full", action="store_true", help="Flujo completo: Sincronización local + Push en CPTS_Notes + Push en glmbx-web.")
+    parser.add_argument("-d", "--dry-run", action="store_true", help="Simula el proceso sin escribir en disco ni ejecutar Git.")
+    parser.add_argument("-h", "--help", action="store_true", help="Muestra el menú de ayuda detallado.")
+    return parser
 
 
 def main():
-    args = sys.argv[1:]
-    
-    # Si no se pasan argumentos o se pide ayuda, mostrar el menú de opciones
-    if not args or "-h" in args or "--help" in args:
+    parser = build_parser()
+    args = parser.parse_args()
+
+    # Si no se pasan argumentos o se solicita ayuda, mostrar menú explicativo
+    if len(sys.argv) == 1 or args.help:
         print_help()
         return
 
-    dry_run = "--dry-run" in args
-    do_git = "-g" in args or "--git" in args
-    do_sync = "-s" in args or "--sync" in args or do_git or dry_run
-
-    if not do_sync:
+    # Validar que al menos un modo o dry-run sea seleccionado
+    if not (args.local or args.push_cpts or args.full or args.dry_run):
         print_help()
         return
 
     print_banner()
     cpts_root, web_root, web_notes_dir = get_paths()
 
+    if not cpts_root.exists():
+        print(f"{RED}❌ Error: No se encontró la carpeta CPTS_Notes en {cpts_root}{RESET}")
+        sys.exit(1)
+
+    if not web_root.exists():
+        print(f"{RED}❌ Error: No se encontró el repositorio glmbx-web en {web_root}{RESET}")
+        sys.exit(1)
+
     print(f"{BOLD}Rutas configuradas:{RESET}")
     print(f"  • Origen (Obsidian):  {CYAN}{cpts_root}{RESET}")
     print(f"  • Destino (Web):      {CYAN}{web_notes_dir}{RESET}")
-    if dry_run:
-        print(f"  • Modo:               {YELLOW}DRY-RUN (Simulación){RESET}")
+    if args.dry_run:
+        print(f"  • Modo:               {YELLOW}DRY-RUN (Simulación activa){RESET}")
     print()
 
-    added, updated, deleted = sync_notes(cpts_root, web_notes_dir, dry_run=dry_run)
+    # Modo: Push solo en CPTS_Notes
+    if args.push_cpts and not (args.local or args.full):
+        git_commit_and_push_cpts(cpts_root, dry_run=args.dry_run)
+        print(f"\n{GREEN}{BOLD}✨ Tarea de CPTS_Notes finalizada.{RESET}\n")
+        return
+
+    # Sincronización local (aplica para --local, --full o --dry-run standalone)
+    added, updated, deleted = sync_notes(cpts_root, web_notes_dir, dry_run=args.dry_run)
 
     print(f"\n{BOLD}═════════════════ Resumen de Sincronización ═════════════════{RESET}")
     print(f"  • Agregados:   {GREEN}{added}{RESET}")
@@ -222,15 +299,23 @@ def main():
     print(f"{BOLD}═════════════════════════════════════════════════════════════{RESET}")
 
     total_changes = added + updated + deleted
-    if total_changes == 0:
-        print(f"\n{GREEN}✔ Todo está al día y validado con el esquema de Astro. No se requirieron cambios.{RESET}\n")
-    else:
-        summary_str = f"{added} added, {updated} updated, {deleted} deleted"
-        if not dry_run and do_git:
-            git_commit_and_push(web_root, summary_str)
-        elif not dry_run and not do_git:
-            print(f"\n{CYAN}💡 Tip:{RESET} Para hacer commit y push automático a GitHub, ejecutá: {BOLD}./sync_notes.py --git{RESET}\n")
+    summary_str = f"{added} added, {updated} updated, {deleted} deleted"
+
+    # Manejo de Git según el modo elegido
+    if args.full:
+        git_commit_and_push_cpts(cpts_root, dry_run=args.dry_run)
+        git_commit_and_push_web(web_root, summary_str, dry_run=args.dry_run)
+    elif args.push_cpts:
+        git_commit_and_push_cpts(cpts_root, dry_run=args.dry_run)
+    elif args.local and not args.dry_run:
+        print(f"\n{CYAN}💡 Tip:{RESET} Para sincronizar y publicar en ambos repositorios ejecutá: {BOLD}./sync_notes.py --full{RESET}\n")
+
+    print(f"\n{GREEN}{BOLD}🚀 Proceso completado exitosamente.{RESET}\n")
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        print(f"\n\n{YELLOW}Operación cancelada por el usuario.{RESET}\n")
+        sys.exit(0)
