@@ -30,7 +30,8 @@ SECTIONS = [
     "01_Reconocimiento_General",
     "02_Servicios_Puertos",
     "03_Vulnerabilidades_Web",
-    "04_Post_Explotacion",
+    "04_Cracking_y_Cifrado",
+    "05_Post_Explotacion",
 ]
 
 
@@ -160,13 +161,20 @@ def sync_notes(cpts_root: Path, web_notes_dir: Path, dry_run: bool = False) -> T
                 dest_path.write_text(processed_text, encoding="utf-8")
 
     for rel_str, dest_path in sorted(dest_files.items()):
-        top_folder = rel_str.split(os.sep)[0]
-        if top_folder in SECTIONS:
-            if rel_str not in source_files:
-                deleted += 1
-                print(f"  {RED}[-] ELIMINADO{RESET} {rel_str}")
-                if not dry_run:
-                    dest_path.unlink()
+        if rel_str not in source_files:
+            deleted += 1
+            print(f"  {RED}[-] ELIMINADO{RESET} {rel_str}")
+            if not dry_run:
+                dest_path.unlink()
+
+    if not dry_run and web_notes_dir.exists():
+        for dirpath, _, _ in os.walk(web_notes_dir, topdown=False):
+            p = Path(dirpath)
+            if p != web_notes_dir and not any(p.iterdir()):
+                try:
+                    p.rmdir()
+                except OSError:
+                    pass
 
     return added, updated, deleted
 
