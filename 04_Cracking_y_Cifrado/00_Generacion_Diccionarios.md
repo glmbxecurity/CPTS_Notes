@@ -112,3 +112,8 @@ Mirar el repositorio y la ayuda porque tiene varios patrones y maneras de utiliz
 ```bash
 git clone https://github.com/urbanadventurer/username-anarchy
 ```
+
+Ejemplo 1:
+```bash
+./username-anarchy --input-file ./test-names.txt
+```

