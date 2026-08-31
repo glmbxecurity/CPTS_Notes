@@ -358,7 +358,12 @@ def git_commit_and_push_cpts(cpts_root: Path, dry_run: bool = False) -> bool:
         print(f"{GREEN}✔ Commit creado en CPTS_Notes: {commit_msg}{RESET}")
 
         print(f"📤 Haciendo push a origin en CPTS_Notes...")
-        subprocess.run(["git", "push"], cwd=cpts_root, check=True)
+        branch_res = subprocess.run(
+            ["git", "branch", "--show-current"],
+            cwd=cpts_root, capture_output=True, text=True, check=True
+        )
+        current_branch = branch_res.stdout.strip() or "main"
+        subprocess.run(["git", "push", "-u", "origin", current_branch], cwd=cpts_root, check=True)
         print(f"{GREEN}✔ Push completado en CPTS_Notes exitosamente.{RESET}")
         return True
     except subprocess.CalledProcessError as e:
@@ -400,7 +405,12 @@ def git_commit_and_push_web(web_root: Path, writeup_titles: List[str], dry_run: 
         print(f"{GREEN}✔ Commit creado en glmbx-web: {commit_msg}{RESET}")
 
         print(f"📤 Haciendo push a origin en glmbx-web...")
-        subprocess.run(["git", "push"], cwd=web_root, check=True)
+        branch_res = subprocess.run(
+            ["git", "branch", "--show-current"],
+            cwd=web_root, capture_output=True, text=True, check=True
+        )
+        current_branch = branch_res.stdout.strip() or "main"
+        subprocess.run(["git", "push", "-u", "origin", current_branch], cwd=web_root, check=True)
         print(f"{GREEN}✔ Push completado en glmbx-web exitosamente.{RESET}")
         return True
     except subprocess.CalledProcessError as e:
