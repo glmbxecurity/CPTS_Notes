@@ -34,12 +34,14 @@ ldapsearch -x -H ldap://<IP_DC> -b "DC=dominio,DC=local"
 
 ---
 
-## 🎯 2. Enumeración Con Credenciales (Interno)
+## 🎯 2. Enumeración AD
 Una vez obtienes un usuario válido (aunque sea uno con pocos privilegios).
 
 ### NetExec (El estándar actual)
 Es la herramienta más rápida para mapear el dominio desde Linux.
 ```bash
+# Enumerar el dominio de active directory
+nxc smb <IP_DC>
 # Listar usuarios y sus descripciones (¡Busca contraseñas en las notas!)
 nxc smb <IP_DC> -u 'usuario' -p 'password' --users
 

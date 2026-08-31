@@ -3,7 +3,7 @@ title: "Cracking de Hashes, Modos y Reglas (John & Hashcat)"
 pubDate: '2026-08-26'
 ---
 
-Guía técnica de cracking de hashes offline, modos de ataque en GPU/CPU (diccionario, combinatorio, máscara), modo Single de John, reglas y generación de diccionarios con CeWL.
+Guía técnica de cracking de hashes offline, modos de ataque en GPU/CPU (diccionario, combinatorio, máscara), modo Single de John y mutaciones con reglas.
 
 ---
 
@@ -29,8 +29,8 @@ Diseñado específicamente para cuentas de Linux. Genera candidatos de contrase�
 # Aislar la línea del archivo passwd/shadow objetivo
 echo 'r0lf:$6$ues25dIanlctrWxg$nZHVz2z4kCy1760Ee28M1xtHdGoy0C2cYzZ8l2sVa1kIa8K9gAcdBP.GI6ng/qA4oaMrgElZ1Cb9OeXO4Fvy3/:0:0:Rolf Sebastian:/home/r0lf:/bin/bash' > passwd_single
 
-# Ejecutar modo single
-john --single passwd_single
+# Ataque en modo Single con formato explícito
+john --single --format=sha512crypt passwd_single
 ```
 
 ### Modo Wordlist y Especificación de Formato
@@ -38,7 +38,7 @@ john --single passwd_single
 # Ataque por diccionario estándar
 john --wordlist=/usr/share/wordlists/rockyou.txt hashes.txt
 
-# Forzar formato específico
+# Forzar formato específico si no lo autodetecta
 john --format=raw-md5 --wordlist=/usr/share/wordlists/rockyou.txt hashes.txt
 
 # Ver contraseñas ya rotas en la base de datos local
@@ -49,54 +49,55 @@ john --show hashes.txt
 
 ## ⚡ 3. Hashcat (GPU Cracking)
 
-### Sintaxis Base y Modos de Ataque (`-a`)
+Sintaxis general:
 ```bash
 hashcat -a <MODO_ATAQUE> -m <TIPO_HASH> <HASH_O_FICHERO> <DICCIONARIO_O_MASCARA>
 ```
 
-| Parámetro `-a` | Modo de Ataque | Descripción |
+### Modos de Ataque (`-a`)
+| Modo | Nombre | Descripción |
 | :--- | :--- | :--- |
 | `-a 0` | **Straight / Wordlist** | Ataque de diccionario clásico línea por línea. |
 | `-a 1` | **Combination** | Combina palabras de dos diccionarios (ej. `palabra1 + palabra2`). |
-| `-a 3` | **Brute-force / Mask** | Fuerza bruta personalizada mediante patrones de máscara. |
+| `-a 3` | **Brute-Force / Mask** | Genera combinaciones basadas en patrones/posiciones de caracteres. |
 | `-a 6` | **Hybrid Wordlist + Mask** | Añade sufijos/máscaras al final de cada palabra del diccionario. |
 | `-a 7` | **Hybrid Mask + Wordlist** | Añade prefijos/máscaras al inicio de cada palabra del diccionario. |
 
-### Modos de Hashes Habituales (`-m`)
-| Algoritmo | Modo `-m` | Ejemplo |
-| :--- | :--- | :--- |
-| **MD5** | `0` | `hashcat -a 0 -m 0 hash.txt rockyou.txt` |
-| **NTLM (Windows)** | `1000` | `hashcat -a 0 -m 1000 hash.txt rockyou.txt` |
-| **Kerberos 5 AS-REP (krb5asrep)** | `18200` | `hashcat -a 0 -m 18200 asrep.txt rockyou.txt` |
-| **Kerberos 5 TGS (Kerberoast)** | `13100` | `hashcat -a 0 -m 13100 tgs.txt rockyou.txt` |
-| **SHA-256** | `1400` | `hashcat -a 0 -m 1400 hash.txt rockyou.txt` |
-| **SHA-512 ($6$ Linux Shadow)** | `1800` | `hashcat -a 0 -m 1800 hash.txt rockyou.txt` |
-| **Bcrypt ($2a$ / $2y$)** | `3200` | `hashcat -a 0 -m 3200 hash.txt rockyou.txt` |
-| **MSSQL (2012 / 2014)** | `17300` | `hashcat -a 0 -m 17300 hash.txt rockyou.txt` |
-| **IPMI 2.0 RAKP** | `7300` | `hashcat -a 0 -m 7300 hash.txt rockyou.txt` |
-| **BitLocker** | `22100` | `hashcat -a 0 -m 22100 hash.txt rockyou.txt` |
+### Tipos de Hash Comunes (`-m`)
+| Modo (`-m`) | Tipo de Hash / Algoritmo |
+| :--- | :--- |
+| `0` | MD5 |
+| `100` | SHA1 |
+| `1000` | NTLM (Windows local / SAM / NTDS) |
+| `1800` | SHA512-Crypt (Linux `/etc/shadow` `$6$`) |
+| `3200` | bcrypt (Linux `/etc/shadow` `$2b$`) |
+| `13100` | Kerberos 5 TGS-REP (Kerberoasting) |
+| `18200` | Kerberos 5 AS-REP (AS-REPRoasting) |
 
 ---
 
-## 🎭 4. Ataques de Máscara (Mask Attacks)
+## 🎭 4. Ataques por Máscara (Mask Attacks)
 
-Símbolos de conjuntos de caracteres en Hashcat:
+### Charsets Incorporados
+* `?l` = Minúsculas `[a-z]`
+* `?u` = Mayúsculas `[A-Z]`
+* `?d` = Dígitos `[0-9]`
+* `?h` = Hexadecimal minúscula `[0-9a-f]`
+* `?H` = Hexadecimal mayúscula `[0-9A-F]`
+* `?s` = Caracteres especiales y puntuación
+* `?a` = Todos los caracteres imprimibles (`?l?u?d?s`)
+* `?b` = Todos los bytes (`0x00 - 0xff`)
 
-| Símbolo | Conjunto de Caracteres | Rango |
-| :--- | :--- | :--- |
-| `?l` | Letras minúsculas | `abcdefghijklmnopqrstuvwxyz` |
-| `?u` | Letras mayúsculas | `ABCDEFGHIJKLMNOPQRSTUVWXYZ` |
-| `?d` | Dígitos | `0123456789` |
-| `?h` | Hexadecimal minúscula | `0123456789abcdef` |
-| `?H` | Hexadecimal mayúscula | `0123456789ABCDEF` |
-| `?s` | Símbolos y caracteres especiales | `!"#$%&'()*+,-./:;<=>?@[\]^_\`{\|}~` |
-| `?a` | Todos los anteriores imprimibles | `?l?u?d?s` |
-| `?b` | Todos los bytes posibles | `0x00 - 0xff` |
-
-### Ejemplos Prácticos de Máscara:
+### Ejemplos Prácticos
 ```bash
-# Patrón: 1 Mayúscula, 4 minúsculas, 1 dígito, 1 símbolo (ej. Admin1!)
-hashcat -a 3 -m 0 hash.txt '?u?l?l?l?l?d?s'
+# Fuerza bruta: 8 caracteres minúsculas fijos (?l?l?l?l?l?l?l?l):
+hashcat -a 3 -m 0 hash.txt ?l?l?l?l?l?l?l?l
+
+# Máscara compleja: Mayúscula + 4 minúsculas + 2 dígitos + 1 símbolo (ej. Spring23!):
+hashcat -a 3 -m 1000 hash.txt '?u?l?l?l?l?d?d?s'
+
+# Longitud incremental (de 6 a 8 dígitos numéricos):
+hashcat -a 3 -m 1000 hash.txt --increment --increment-min 6 --increment-max 8 '?d?d?d?d?d?d?d?d'
 
 # Definir conjunto personalizado (-1) con mayúsculas y dígitos:
 hashcat -a 3 -m 7300 hash.txt -1 ?d?u '?1?1?1?1?1?1?1?1'
@@ -117,24 +118,4 @@ hashcat -a 0 -m 1000 hash.txt /usr/share/wordlists/rockyou.txt -r /usr/share/has
 
 # Reglas avanzadas
 hashcat -a 0 -m 1000 hash.txt /usr/share/wordlists/rockyou.txt -r /usr/share/hashcat/rules/rockyou-30000.rule
-```
-
----
-
-## 🔠 6. Generación de Diccionarios a Medida
-
-### Extracción de Palabras Web con CeWL
-```bash
-# Rastrear una web con profundidad 4 y extraer palabras con longitud mínima de 6 caracteres
-cewl https://www.inlanefreight.com -d 4 -m 6 --lowercase -w inlane.wordlist
-```
-
-### Diccionarios Compuestos con Hashcat (`-a 1`)
-Permite fusionar dos listas de palabras (ej. datos OSINT de empleados con fechas/años) combinándolas en la salida estándar:
-```bash
-# Combina cada palabra de lista1 con lista2 aplicando mayúscula inicial (-j c -k c)
-hashcat -a 1 lista1.txt lista2.txt -j c -k c --stdout > compuesta.txt
-
-# Lanzar ataque con el diccionario compuesto resultante aplicando una regla personalizada
-hashcat -a 0 -m 0 hash.txt compuesta.txt -r custom.rule
 ```
