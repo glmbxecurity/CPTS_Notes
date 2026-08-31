@@ -1,3 +1,5 @@
+# Búsqueda de Credenciales en Windows
+
 Una vez tienes acceso por CLI o GUI se pueden buscar credenciales en ficheros, y lugares del sistema.
 
 ### Buscar cadenas en ficheros
