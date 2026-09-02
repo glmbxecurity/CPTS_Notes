@@ -5,7 +5,7 @@ pubDate: '2025-11-26'
 
 Guía para analizar capturas de tráfico `.pcap` (Post-Explotación o CTF) y sniffing en tiempo real.
 
-## 🔍 1. Búsqueda de Archivos (Post-Explotación)
+## 🔍 1. Búsqueda de Archivos
 Si tienes acceso a la máquina, busca capturas olvidadas. Suelen contener credenciales de servicios que el administrador estaba testeando o tráfico de otros usuarios.
 
 ```bash
@@ -67,4 +67,34 @@ strings captura.pcap | grep -iE "pass|pwd|login|user"
 
 # Ver estadísticas rápidas del archivo (tamaño, duración, cantidad de paquetes)
 capinfos captura.pcap
+```
+
+## Pcredz
+herramienta automatizada para buscar credenciales de un .pcapng o para analizar trafico en tiempo real.
+https://github.com/lgandx/PCredz
+
+Despliegue y uso (docker)
+```bash
+# Primero: lanzar contenedor
+docker build -t pcredz .
+
+# Segundo: ejecutar el pcredz en el directorio actual
+docker run --rm -v $(pwd):/data pcredz -f /data/capture.pcap
+```
+Ejemplos basicos de uso:
+```bash
+# Parse a single PCAP file
+-f capture.pcap
+
+# Parse all PCAP files in a directory (recursive)
+-d /path/to/pcap/directory/
+
+# Live capture on an interface (requires root)
+-i eth0
+
+# Verbose mode (show duplicate credentials)
+-f capture.pcap -v
+
+# Custom output directory
+-f capture.pcap -o /tmp/pcredz-output/
 ```

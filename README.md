@@ -2,6 +2,7 @@
 
 > Repositorio personal de apuntes técnicos, metodologías y guías de explotación orientadas a la obtención de la certificación **Certified Penetration Testing Specialist (CPTS)** de [Hack The Box](https://www.hackthebox.com/), junto con la resolución detallada de máquinas y entornos de laboratorio (*HTB Writeups*).
 
+
 ---
 
 ## 🎯 Propósito del Repositorio
