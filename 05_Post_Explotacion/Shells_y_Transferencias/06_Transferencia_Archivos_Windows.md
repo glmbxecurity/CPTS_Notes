@@ -163,7 +163,7 @@ Copy-Item -Path C:\SensitiveData.zip -Destination C:\ -FromSession $Session
 Permite que una carpeta local de Linux aparezca expuesta como una unidad de red dentro del escritorio remoto (`\\tsclient\`):
 ```bash
 # Con xfreerdp
-xfreerdp /v:<TARGET_IP> /u:Administrator /p:'Password123' /drive:kali,/home/eddy/tools /cert:ignore
+xfreerdp3 /v:<TARGET_IP> /u:Administrator /p:'Password123' /drive:kali,/home/eddy/tools /cert:ignore
 
 # Con rdesktop
 rdesktop <TARGET_IP> -u Administrator -p 'Password123' -r disk:linux=/home/eddy/tools

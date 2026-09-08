@@ -1,3 +1,5 @@
+# Windows Credential Hunting
+
 Una vez tienes acceso por CLI o GUI se pueden buscar credenciales en ficheros, y lugares del sistema.
 
 ### Buscar cadenas en ficheros
@@ -32,7 +34,7 @@ Si es un Servidor (IIS, SQL): Busca en archivos de configuración web (web.confi
 Herramienta con modulos para buscar credenciales en navegadores, mails, chats, memoria, winscp, wifi, etc.
 https://github.com/AlessandroZ/LaZagne
 
-```
+```cmd
 # Con "all" ejecuta todos los modulos
 start LaZagne.exe all -vv
 ```

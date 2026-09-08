@@ -49,7 +49,7 @@ ffuf -u http://target.com/login.php -X POST -d "username=admin&password=FUZZ" -w
 wfuzz -c -f sub-fighter -w subdomains.txt -u http://target.com -H "Host: FUZZ.target.com" --hc 403,404
 
 # Directorios con recursividad (Profundidad 2)
-wfuzz -c -w /usr/share/wordlists/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -u http://target.com/FUZZ --hc 404 -R 2
+wfuzz -c -w /usr/share/wordlists/seclists/Discovery/Web-Content/DirBuster-2007_directory-list-2.3-medium.txt -u http://target.com/FUZZ --hc 404 -R 2
 ```
 
 ### 4. Feroxbuster (El mejor para recursividad)

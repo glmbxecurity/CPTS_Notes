@@ -92,8 +92,10 @@ def process_markdown_content(raw_text: str, filename: str) -> Tuple[str, bool]:
         new_fm_lines = fm_content.splitlines()
         
         if not has_title:
-            first_h1 = re.search(r"^#\s+(.+)$", body, re.MULTILINE)
+            text_without_code = re.sub(r"```.*?```", "", body, flags=re.DOTALL)
+            first_h1 = re.search(r"^#\s+(.+)$", text_without_code, re.MULTILINE)
             clean_title = first_h1.group(1).strip() if first_h1 else filename.replace(".md", "").replace("_", " ")
+            clean_title = clean_title.replace('"', '\\"')
             new_fm_lines.insert(0, f"title: \"{clean_title}\"")
             modified = True
             
@@ -104,8 +106,10 @@ def process_markdown_content(raw_text: str, filename: str) -> Tuple[str, bool]:
             
         final_text = f"---\n" + "\n".join(new_fm_lines) + f"\n---\n{body}"
     else:
-        first_h1 = re.search(r"^#\s+(.+)$", raw_text, re.MULTILINE)
+        text_without_code = re.sub(r"```.*?```", "", raw_text, flags=re.DOTALL)
+        first_h1 = re.search(r"^#\s+(.+)$", text_without_code, re.MULTILINE)
         clean_title = first_h1.group(1).strip() if first_h1 else filename.replace(".md", "").replace("_", " ")
+        clean_title = clean_title.replace('"', '\\"')
         today_str = datetime.now().strftime("%Y-%m-%d")
         final_text = f"---\ntitle: \"{clean_title}\"\npubDate: '{today_str}'\n---\n\n{raw_text.lstrip()}"
         modified = True

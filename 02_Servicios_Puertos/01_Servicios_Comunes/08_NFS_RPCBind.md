@@ -34,8 +34,8 @@ Para funcionar, NFS se apoya en **RPCBind (Portmapper)** en el puerto **111**, q
 rpcinfo -p <TARGET_IP>
 nmap -p 111,2049 -sV -sC <TARGET_IP>
 
-# Scripts NSE para listar montajes y ACLs
-nmap -p 2049 --script=nfs-ls,nfs-statfs,nfs-showmount,nfs-acls <TARGET_IP>
+# Scripts NSE para listar montajes
+nmap -p 2049 --script=nfs-ls,nfs-statfs,nfs-showmount <TARGET_IP>
 ```
 
 ### Listar Carpetas Compartidas (`showmount`)

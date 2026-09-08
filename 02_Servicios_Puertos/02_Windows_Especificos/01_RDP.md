@@ -41,16 +41,16 @@ Es la herramienta de referencia para interactuar con escritorios remotos desde L
 
 ```bash
 # Conexión estándar
-xfreerdp /u:<usuario> /p:"<password>" /v:<TARGET_IP> /cert:ignore
+xfreerdp3 /u:<usuario> /p:"<password>" /v:<TARGET_IP> /cert:ignore
 
 # Conexión con usuario de Dominio
-xfreerdp /u:<usuario> /d:<dominio> /p:"<password>" /v:<TARGET_IP> /cert:ignore
+xfreerdp3 /u:<usuario> /d:<dominio> /p:"<password>" /v:<TARGET_IP> /cert:ignore
 
 # Compartición de carpeta local (mapea /tmp de Kali en el explorador de Windows)
-xfreerdp /u:<usuario> /p:"<password>" /v:<TARGET_IP> /cert:ignore /drive:kali,/tmp
+xfreerdp3 /u:<usuario> /p:"<password>" /v:<TARGET_IP> /cert:ignore /drive:kali,/tmp
 
 # Conexión dinámica ajustando resolución y rendimiento
-xfreerdp /u:<usuario> /p:"<password>" /v:<TARGET_IP> /dynamic-resolution +clipboard /cert:ignore
+xfreerdp3 /u:<usuario> /p:"<password>" /v:<TARGET_IP> /dynamic-resolution +clipboard /cert:ignore
 ```
 
 ---

@@ -14,7 +14,7 @@ netexec smb 10.129.201.57 -u bwilliamson -p /usr/share/wordlists/fasttrack.txt
 ```
 
 ### Ataque a NTDS.dit (Opcion 1)
-Es el directorio donde almaena todos los nombres de usuarios del dominio, hashes de contraseñas e información del esquema. 
+Es el directorio donde almacena todos los nombres de usuarios del dominio, hashes de contraseñas e información del esquema. 
 
 > Para capturar el NTDS.dit se requiere tener permisos de Administrador en el DC (ya sea local o de dominio)
 
