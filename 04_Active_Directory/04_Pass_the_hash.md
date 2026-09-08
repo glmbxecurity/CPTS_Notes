@@ -1,3 +1,5 @@
+# Pass the Hash (PtH)
+
 El ataque Pass the Hash (PtH) es una técnica en la que un atacante utiliza un hash de contraseña en lugar de la contraseña en texto plano para la autenticación. Lo bueno es que no se necesita descifrar el hash ya que este ataque lo que explota es el protocolo de autenticación ya que el hash es estático a menos que se cambie la contraseña.
 
 

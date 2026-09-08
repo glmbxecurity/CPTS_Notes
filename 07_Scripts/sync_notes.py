@@ -25,14 +25,24 @@ RED = "\033[31m"
 MAGENTA = "\033[35m"
 DIM = "\033[2m"
 
-SECTIONS = [
-    "00_Fundamentos_y_Metodologias",
-    "01_Reconocimiento_General",
-    "02_Servicios_Puertos",
-    "03_Vulnerabilidades_Web",
-    "04_Cracking_y_Cifrado",
-    "05_Post_Explotacion",
-]
+def get_study_sections(cpts_root: Path) -> List[str]:
+    """
+    Descubre dinámicamente todas las carpetas numeradas de notas de estudio,
+    excluyendo scripts, writeups y carpetas de configuración.
+    Esto asegura que carpetas como 04_Active_Directory y 06_Cracking_y_Cifrado
+    siempre se sincronicen y no se borren por error.
+    """
+    excluded = {
+        "06_Scripts", "07_Scripts", "scripts", "Scripts",
+        "10_HTB_writeups", "writeups", "assets"
+    }
+    sections = []
+    if cpts_root.exists():
+        for item in sorted(cpts_root.iterdir()):
+            if item.is_dir() and not item.name.startswith(".") and item.name not in excluded:
+                if re.match(r"^\d+_", item.name):
+                    sections.append(item.name)
+    return sections
 
 
 def print_banner():
@@ -124,8 +134,9 @@ def sync_notes(cpts_root: Path, web_notes_dir: Path, dry_run: bool = False) -> T
         if not dry_run:
             web_notes_dir.mkdir(parents=True, exist_ok=True)
             
+    sections = get_study_sections(cpts_root)
     source_files = {}
-    for section in SECTIONS:
+    for section in sections:
         sec_dir = cpts_root / section
         if sec_dir.exists():
             for p in sec_dir.rglob("*.md"):

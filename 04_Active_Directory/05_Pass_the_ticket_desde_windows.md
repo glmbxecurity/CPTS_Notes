@@ -1,3 +1,4 @@
+# Pass the Ticket desde Windows
 
 ## Introduccion al funcionamiento de kerberos
 El sistema de autenticación Kerberos se basa en tickets. La idea central de Kerberos es no entregar la contraseña de una cuenta a cada servicio que utilizas. En su lugar, Kerberos mantiene todos los tickets en tu sistema local y presenta a cada servicio solo el ticket específico para ese servicio, evitando que un ticket se utilice para otro propósito.

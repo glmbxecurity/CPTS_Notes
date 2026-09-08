@@ -1,3 +1,5 @@
+# Ataques AD y NTDS.dit
+
 ### Enumerar usuarios AD con Kerbrute
 Enumerar usuarios de un dominio, conociendo el controlador de dominio, el propio dominio y teniendo una lista de usuarios.
 ```bash
