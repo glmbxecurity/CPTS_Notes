@@ -87,6 +87,9 @@ reg add HKLM\System\CurrentControlSet\Control\Lsa /t REG_DWORD /v DisableRestric
 xfreerdp3  /v:10.129.201.126 /u:julio /pth:64F12CDDAA88057E06A81B54E73B949B
 ```
 
+> [!NOTE]
+> `rdesktop` **no admite** el parámetro `/pth` para pasar hashes NTLM directos (Restricted Admin mode). Para Pass-the-Hash sobre RDP es obligatorio utilizar `xfreerdp3`.
+
 > UAC tiene limitado el Pass The Hash para cuentas locales. Hay una clave de registro que está a 0 y debemos cambiar a 1. y es esta: `HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System\LocalAccountTokenFilterPolicy`
 
 > Además hay que tener en cuenta. Por defecto la clave de registro: `FilterAdministratorToken` viene a 0. Pero si alguien la habilita, estso imposibilitará el Pass The Hash

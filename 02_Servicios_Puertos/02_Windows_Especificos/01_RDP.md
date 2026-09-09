@@ -35,9 +35,10 @@ git clone https://github.com/CiscoCXSecurity/rdp-sec-check.git && cd rdp-sec-che
 
 ---
 
-## 🚀 2. Conexión con `xfreerdp`
+## 🚀 2. Conexión Remota (`xfreerdp` / `rdesktop`)
 
-Es la herramienta de referencia para interactuar con escritorios remotos desde Linux:
+### Opción A: `xfreerdp3` (FreeRDP)
+Es la herramienta más moderna y versátil para escritorios remotos desde Linux:
 
 ```bash
 # Conexión estándar
@@ -51,6 +52,23 @@ xfreerdp3 /u:<usuario> /p:"<password>" /v:<TARGET_IP> /cert:ignore /drive:kali,/
 
 # Conexión dinámica ajustando resolución y rendimiento
 xfreerdp3 /u:<usuario> /p:"<password>" /v:<TARGET_IP> /dynamic-resolution +clipboard /cert:ignore
+```
+
+### Opción B: `rdesktop`
+Alternativa directa y ligera (ideal cuando FreeRDP da problemas de renderizado o certificados):
+
+```bash
+# Conexión estándar (sin dominio)
+rdesktop -u <usuario> -p '<password>' -g 1024x768 <TARGET_IP>
+
+# Conexión con usuario de Dominio
+rdesktop -u <usuario> -d <dominio> -p '<password>' -g 1024x768 <TARGET_IP>
+
+# Ejemplo real en entorno de laboratorio HTB:
+rdesktop -u Administrator -d inlanefreight.htb -p 'AnotherC0mpl3xP47141' -g 1024x768 10.129.155.217
+
+# Compartición de carpeta local
+rdesktop -u <usuario> -p '<password>' -g 1024x768 -r disk:kali=/tmp <TARGET_IP>
 ```
 
 ---

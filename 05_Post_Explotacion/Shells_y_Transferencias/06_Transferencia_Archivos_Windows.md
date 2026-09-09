@@ -165,7 +165,7 @@ Permite que una carpeta local de Linux aparezca expuesta como una unidad de red 
 # Con xfreerdp
 xfreerdp3 /v:<TARGET_IP> /u:Administrator /p:'Password123' /drive:kali,/home/eddy/tools /cert:ignore
 
-# Con rdesktop
-rdesktop <TARGET_IP> -u Administrator -p 'Password123' -r disk:linux=/home/eddy/tools
+# Con rdesktop (-d <dominio> si aplica)
+rdesktop -u Administrator -p 'Password123' -g 1024x768 -r disk:linux=/home/eddy/tools <TARGET_IP>
 ```
 Dentro de la sesión de Windows: abrir explorador y navegar a `\\tsclient\kali` o `\\tsclient\linux`.
