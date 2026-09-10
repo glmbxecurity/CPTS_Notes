@@ -119,3 +119,7 @@ hashcat -a 0 -m 1000 hash.txt /usr/share/wordlists/rockyou.txt -r /usr/share/has
 # Reglas avanzadas
 hashcat -a 0 -m 1000 hash.txt /usr/share/wordlists/rockyou.txt -r /usr/share/hashcat/rules/rockyou-30000.rule
 ```
+
+### Crackstation
+Suele tener millones de hashes de contraseñas, no esta de mas mirar ahi por si acaso. parece ser que da buenos resultados con hashes NTLM
+https://crackstation.net/
