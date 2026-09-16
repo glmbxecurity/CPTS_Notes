@@ -23,13 +23,6 @@ Existen diversas vías para conseguir el archivo `.pfx` dependiendo del vector d
 ### Vía 1: Coerción + NTLM Relay a AD CS (HTTP Enrollment)
 Se intercepta una autenticación NTLM forzada y se relayea a la web de AD CS (`/certsrv`) para que emita un certificado.
 
-```
-[Atacante] --(1. Coerción RPC)--> [Víctima (DC / Server)]
-    ^                                  |
-    |--(2. Auth NTLM)------------------+
-    |
-[ntlmrelayx] --(3. Relay HTTP)--> [CA /certsrv] ===> Genera cert.pfx
-```
 
 1. **Ponerse a la escucha y hacer relay contra la CA:**
    ```bash
