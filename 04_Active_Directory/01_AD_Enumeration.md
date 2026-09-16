@@ -8,7 +8,19 @@ En una red de Active Directory (AD), el objetivo final suele ser comprometer el 
 
 ---
 
-## 🔎 1. Enumeración Sin Credenciales (Externo)
+## 🌐 1. Descubrimiento y DNS Interno
+El DC suele actuar como servidor DNS. Puedes intentar descubrir nombres de otros servidores internos y el dominio.
+```bash
+# Intentar transferencia de zona (AXFR)
+dig axfr @<IP_DC> dominio.local
+
+# Enumerar subdominios comunes
+nmap -p 53 --script dns-brute --script-args dns-brute.domain=dominio.local <IP_DC>
+```
+
+---
+
+## 🔎 2. Enumeración Sin Credenciales (Externo)
 Si acabas de llegar a la red y solo tienes la IP del DC.
 
 ### Kerberos (Puerto 88) - Kerbrute
@@ -34,7 +46,7 @@ ldapsearch -x -H ldap://<IP_DC> -b "DC=dominio,DC=local"
 
 ---
 
-## 🎯 2. Enumeración AD
+## 🎯 3. Enumeración AD (Autenticado)
 Una vez obtienes un usuario válido (aunque sea uno con pocos privilegios).
 
 ### NetExec (El estándar actual)
@@ -65,7 +77,7 @@ bloodhound-python -u 'usuario' -p 'password' -d dominio.local -ns <IP_DC> -c All
 
 ---
 
-## 🐚 3. PowerView (Enumeración desde PowerShell)
+## 🐚 4. PowerView (Enumeración desde PowerShell)
 Si has ganado acceso a una máquina Windows unida al dominio.
 ```powershell
 Import-Module .\PowerView.ps1
@@ -78,15 +90,5 @@ Find-LocalAdminAccess               # Comprobar si tienes permisos de Admin Loca
 ```
 
 ---
-
-## 🌐 4. DNS Interno
-El DC suele actuar como servidor DNS. Puedes intentar descubrir nombres de otros servidores internos.
-```bash
-# Intentar transferencia de zona (AXFR)
-dig axfr @<IP_DC> dominio.local
-
-# Enumerar subdominios comunes
-nmap -p 53 --script dns-brute --script-args dns-brute.domain=dominio.local <IP_DC>
-```
 
 > **Tip:** Presta mucha atención al campo **"description"** de los usuarios. Es muy común encontrar contraseñas temporales o pistas dejadas por administradores en las notas de los usuarios.

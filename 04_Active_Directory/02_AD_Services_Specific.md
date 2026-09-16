@@ -6,15 +6,6 @@ pubDate: '2025-11-26'
 ## 📂 1. SMB (Puerto 445)
 Es el protocolo fundamental para el intercambio de archivos y para la ejecución remota de procedimientos (RPC) en entornos Windows.
 
-### Enumeración de Recursos y Permisos
-```bash
-# Listar recursos compartidos y permisos de acceso (Read/Write)
-nxc smb <IP> -u 'usuario' -p 'password' --shares
-
-# Listar de forma recursiva todo el contenido de los shares
-smbmap -H <IP> -u 'usuario' -p 'password' -R
-```
-
 ### Información de Seguridad del Dominio
 ```bash
 # Ver política de contraseñas (Longitud, complejidad y umbral de bloqueo)
@@ -22,6 +13,15 @@ nxc smb <IP> -u 'usuario' -p 'password' --pass-pol
 
 # Enumerar sesiones activas en el equipo
 nxc smb <IP> -u 'usuario' -p 'password' --sessions
+```
+
+### Enumeración de Recursos y Permisos
+```bash
+# Listar recursos compartidos y permisos de acceso (Read/Write)
+nxc smb <IP> -u 'usuario' -p 'password' --shares
+
+# Listar de forma recursiva todo el contenido de los shares
+smbmap -H <IP> -u 'usuario' -p 'password' -R
 ```
 
 ---

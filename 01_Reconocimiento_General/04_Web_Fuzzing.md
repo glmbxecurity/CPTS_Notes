@@ -46,7 +46,7 @@ ffuf -u http://target.com/login.php -X POST -d "username=admin&password=FUZZ" -w
 ### 3. Wfuzz (Clásico para VHosts y parámetros)
 ```bash
 # Subdominios/VHosts
-wfuzz -c -f sub-fighter -w subdomains.txt -u http://target.com -H "Host: FUZZ.target.com" --hc 403,404
+wfuzz -c -f sub-fighter -w /usr/share/wordlists/seclists/Discovery/DNS/subdomains-top1million-110000.txt -u http://target.com -H "Host: FUZZ.target.com" --hc 403,404
 
 # Directorios con recursividad (Profundidad 2)
 wfuzz -c -w /usr/share/wordlists/seclists/Discovery/Web-Content/DirBuster-2007_directory-list-2.3-medium.txt -u http://target.com/FUZZ --hc 404 -R 2

