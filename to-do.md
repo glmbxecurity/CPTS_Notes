@@ -6,5 +6,3 @@
 
 * Crear (con IA) metodologia de pentesting, de enumeracion (que enumerar para no dejarse nada), de explotacion (que cosas probar segun lo que me encuentro), de post-explotacion (que enumerar en una maquina una vez entro y que enumerar segun lo que me voy encontrando).
 
-PRUEBA COMMIT DESDE PARROT ASUS
-
