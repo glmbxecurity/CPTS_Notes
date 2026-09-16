@@ -8,7 +8,7 @@ Es una técnica de autenticación en la que se utiliza un **certificado digital 
 > **Regla de oro:** Un certificado con la extensión EKU *Client Authentication* equivale funcionalmente a la contraseña en texto claro de esa cuenta.
 
 ### Identidades en Active Directory: Usuarios vs Máquinas
-En AD, tanto las personas como los equipos son entidades de seguridad (*Security Principals*):
+En AD, tanto las personas como los equipos son entidades de seguridad (*Security Principals*)
 * **Cuentas de Usuario (`usuario`):** Pertenecen a personas o cuentas de servicio. Dan acceso a los recursos y grupos asignados a ese usuario.
 * **Cuentas de Máquina (`EQUIPO$`):** Identificadas con el símbolo `$`. Los procesos del sistema (`SYSTEM`) en Windows se autentican en la red usando la cuenta del equipo local. 
   * Una máquina del grupo `Domain Controllers` (`DC01$`) tiene permisos de replicación de directorio (**DCSync**).
