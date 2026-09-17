@@ -83,7 +83,7 @@ Usamos `gettgtpkinit.py` (de [PKINITtools](https://github.com/dirkjanm/PKINITtoo
 
 ```bash
 # Sintaxis general:
-# python3 gettgtpkinit.py -cert-pfx <fichero.pfx> [-pfx-pass <pass>] -dc-ip <IP_DC> '<DOMINIO>/<CUENTA>' <ruta_salida_ticket.ccache>
+python3 gettgtpkinit.py -cert-pfx <fichero.pfx> [-pfx-pass <pass>] -dc-ip <IP_DC> '<DOMINIO>/<CUENTA>' <ruta_salida_ticket.ccache>
 
 # Ejemplo para USUARIO:
 python3 gettgtpkinit.py -cert-pfx ./usuario.pfx -pfx-pass 'clave123' -dc-ip 10.10.10.10 'CORP.LOCAL/jdoe' /tmp/jdoe.ccache
