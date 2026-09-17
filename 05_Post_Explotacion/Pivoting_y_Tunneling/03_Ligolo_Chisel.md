@@ -41,6 +41,8 @@ session          # select agent session
 start            # start tunnel
 ```
 
+>NOTA: Si es contra maquinas windows, no te fies del ping, lanza un nmap
+
 
 
 ---
