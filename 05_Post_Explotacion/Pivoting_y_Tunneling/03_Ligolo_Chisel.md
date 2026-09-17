@@ -26,7 +26,7 @@ sudo ip link set ligolo up
 ./proxy -selfcert -laddr 0.0.0.0:11601
 
 # After agent connects, add route to internal network
-sudo ip route add 172.16.1.0/24 dev ligolo
+sudo ip route add 172.16.0.0/16 dev ligolo
 
 # In ligolo console:
 session          # select agent session
