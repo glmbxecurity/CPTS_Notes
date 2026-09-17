@@ -39,12 +39,6 @@ start            # start tunnel
 ```
 
 
-**Paso 3: Añadir ruta en tu Kernel (Kali)**
-```bash
-# Ahora tu Kali sabe que para ir a la red interna debe usar la interfaz pwn0
-sudo ip route add 10.10.20.0/24 dev ligolo
-```
-
 ---
 
 ## 🛠️ 2. Chisel (Túneles sobre HTTP)
