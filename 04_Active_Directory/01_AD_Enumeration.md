@@ -83,7 +83,7 @@ Si has ganado acceso a una máquina Windows unida al dominio.
 Import-Module .\PowerView.ps1
 
 Get-NetDomain                       # Información general del dominio
-Get-NetUser | select cn,description # Listar usuarios y sus descripciones
+**Get-NetUser | select cn,description** # Listar usuarios y sus descripciones
 Get-NetComputer                     # Listar todos los equipos del dominio
 Get-NetGroupMember "Domain Admins"  # Listar los administradores del dominio
 Find-LocalAdminAccess               # Comprobar si tienes permisos de Admin Local en otras máquinas
