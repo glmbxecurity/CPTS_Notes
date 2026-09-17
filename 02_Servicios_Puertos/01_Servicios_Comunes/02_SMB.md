@@ -16,16 +16,16 @@ pubDate: '2026-08-26'
 ## ⚙️ Ficheros de Configuración y Directivas Críticas (Samba)
 
 ### Ruta Clave: `/etc/samba/smb.conf`
-| Ajuste en `smb.conf` | Descripción e Impacto de Seguridad |
-| :--- | :--- |
-| `browseable = yes` | ¿Permite listar los recursos compartidos disponibles? |
-| `read only = no` / `writable = yes` | Permite a los usuarios crear, modificar y subir archivos al share. |
-| `guest ok = yes` | ¿Permite la conexión anónima al servicio sin utilizar contraseña? |
-| `enable privileges = yes` | Respeta los privilegios asignados a un SID específico. |
-| `create mask = 0777` | Permisos asignados por defecto a los archivos recién creados. |
-| `directory mask = 0777` | Permisos asignados por defecto a los directorios recién creados. |
-| `logon script = script.sh` | Script ejecutado automáticamente en el inicio de sesión del usuario. |
-| `magic script = script.sh` | Script ejecutado automáticamente al cerrarse la sesión. |
+| Ajuste en `smb.conf`                | Descripción e Impacto de Seguridad                                   |
+| :---------------------------------- | :------------------------------------------------------------------- |
+| `browseable = yes`                  | ¿Permite listar los recursos compartidos disponibles?                |
+| `read only = no` / `writable = yes` | Permite a los usuarios crear, modificar y subir archivos al share.   |
+| `guest ok = yes`                    | ¿Permite la conexión anónima al servicio sin utilizar contraseña?    |
+| `enable privileges = yes`           | Respeta los privilegios asignados a un SID específico.               |
+| `create mask = 0777`                | Permisos asignados por defecto a los archivos recién creados.        |
+| `directory mask = 0777`             | Permisos asignados por defecto a los directorios recién creados.     |
+| `logon script = script.sh`          | Script ejecutado automáticamente en el inicio de sesión del usuario. |
+| `magic script = script.sh`          | Script ejecutado automáticamente al cerrarse la sesión.              |
 
 ---
 
