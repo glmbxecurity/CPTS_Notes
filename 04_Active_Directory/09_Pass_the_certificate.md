@@ -82,6 +82,8 @@ Independientemente de cómo se haya conseguido el archivo `.pfx` (AD CS Relay, S
 Usamos `gettgtpkinit.py` (de [PKINITtools](https://github.com/dirkjanm/PKINITtools)):
 
 ```bash
+## RECORDATORIO
+### Se requiere tener resolucion DNS, o declarado el DC y/
 # Sintaxis general:
 python3 gettgtpkinit.py -cert-pfx <fichero.pfx> [-pfx-pass <pass>] -dc-ip <IP_DC> '<DOMINIO>/<CUENTA>' <ruta_salida_ticket.ccache>
 
