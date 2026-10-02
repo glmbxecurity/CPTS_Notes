@@ -43,4 +43,6 @@ session          # select agent session
 start            # start tunnel
 ```
 
-if automatically the OS creates the static route 'via tun0', we had to eliminate that route be
+if automatically the OS creates the static route 'via tun0', we had to eliminate that route before create the route to ligolo.
+
+---
