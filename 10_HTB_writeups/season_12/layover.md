@@ -46,3 +46,13 @@ start            # start tunnel
 if automatically the OS creates the static route 'via tun0', we had to eliminate that route before create the route to ligolo.
 
 ---
+
+Once pivoting tunnel was established, on my kali visited the web and after that did directory web fuzzing, and found `/admin` directory with a login panel, and noticed that is a craftCMS behind the website.
+
+```bash
+wfuzz -c -w /usr/share/wordlists/seclists/Discovery/Web-Content/DirBuster-2007_directory-list-2.3-medium.txt -u http://portal.international.htb/FUZZ --hc 404 -R 2
+
+000000259:   302        0 L      0 W        0 Ch        "admin"        
+000000291:   301        7 L      12 W       178 Ch      "assets"       
+000001225:   302        0 L      0 W        0 Ch        "logout"
+```
