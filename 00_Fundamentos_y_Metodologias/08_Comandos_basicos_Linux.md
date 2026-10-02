@@ -198,3 +198,11 @@ use <nombre_db>;
 show tables;
 select * from users;
 ```
+
+### Conexiones VPN
+##### Troubleshooting
+Si la conexion es inestable, es interesante bajar la mtu (openvpn al menos)
+```bash
+sudo ip link set dev tun0 mtu 1200
+# Modificar la interfaz si es necesario
+```
