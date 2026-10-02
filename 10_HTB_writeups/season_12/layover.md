@@ -82,3 +82,10 @@ HTML Form URL Encoded: application/x-www-form-urlencoded
     Form item: "password" = "Fl1ghtDeck2026!"
 ```
 
+Once loged in, i found a database backup option and in the .db file found:
+```bash
+INSERT INTO `users` VALUES
+(1,NULL,NULL,1,0,0,0,1,'admin',NULL,NULL,NULL,'admin@htb-international.htb','$2y$13$ZdTZwteklJx2.z6sEY35pehuiOsB28y3sGJTNozu.xTpYRe4MCGg2','2026-07-16 10:10:55',NULL,'2026-10-02 10:17:03',1,'2026-10-02 10:17:03',NULL,0,'$2y$13$nhSgDv8dj9wCGuIsFoh1QOR5diRxIszydVXHbkVXdXC/w67ZpNklK','2026-10-02 10:29:45',NULL,0,'2026-07-15 21:21:19','2026-07-15 21:21:19','2026-10-02 10:29:46'),
+(2,NULL,NULL,1,0,0,0,0,'jenny','Jenny Crawford','Jenny','Crawford','jenny.crawford@htb-international.htb','$2y$13$abHJk/QQLb8BE4L2pkBblebjEeWCMyFAdwguN2d7rDHZnnHJWvG7q','2026-10-02 10:55:26',NULL,NULL,NULL,NULL,NULL,1,NULL,NULL,NULL,0,'2026-07-16 10:13:34','2026-07-16 10:13:34','2026-10-02 10:55:26');
+```
+
